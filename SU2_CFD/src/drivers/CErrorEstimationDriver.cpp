@@ -886,6 +886,7 @@ void CErrorEstimationDriver::SumWeightedHessian2(CSolver   *solver_flow,
 
     const su2double Vol = geometry->node[iPoint]->GetVolume();
 
+    // localScale += pow(abs(EigVal[0]*EigVal[1]),p/(2.*p+nDim))*Vol;
     localScale += pow(abs(EigVal[0]*EigVal[1]),p/(2.*p+nDim))*Vol;
   }
 
@@ -1034,7 +1035,8 @@ void CErrorEstimationDriver::SumWeightedHessian3(CSolver   *solver_flow,
 
     const su2double Vol = geometry->node[iPoint]->GetVolume();
 
-    localScale += pow(abs(EigVal[0]*EigVal[1]*EigVal[2]),p/(2.*p+nDim))*Vol;
+    // localScale += pow(abs(EigVal[0]*EigVal[1]*EigVal[2]),p/(2.*p+nDim))*Vol;
+    localScale += pow(abs(EigVal[0]*EigVal[1]*EigVal[2]),p/(2.*p+nDim));
   }
 
 #ifdef HAVE_MPI
