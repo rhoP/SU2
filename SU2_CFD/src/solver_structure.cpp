@@ -5677,8 +5677,8 @@ void CSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config){
       for (unsigned short iNode=0; iNode<3; ++iNode) {
         const unsigned long kNode = geometry->elem[iElem]->GetNode(iNode);
         const su2double Area = geometry->node[kNode]->GetVolume();
-        const su2double rap = 1./(Area*6.);
-        // const su2double rap = Area/6.;
+        // const su2double rap = 1./(Area*6.);
+        const su2double rap = Area/6.;
         base_nodes->AddAnisoGrad(kNode, i+0, graTri[0] * rap);
         base_nodes->AddAnisoGrad(kNode, i+1, graTri[1] * rap);
       }
@@ -5775,8 +5775,8 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
       for (unsigned short iNode=0; iNode<3; ++iNode) {
         const unsigned long kNode = geometry->elem[iElem]->GetNode(iNode);
         const su2double Area = geometry->node[kNode]->GetVolume();
-        const su2double rap = 1./(Area*6.);
-        // const su2double rap = Area/6.;
+        // const su2double rap = 1./(Area*6.);
+        const su2double rap = Area/6.;
         base_nodes->AddAnisoHess(kNode, i+0, hesTri[0] * rap);
         base_nodes->AddAnisoHess(kNode, i+1, hesTri[1] * rap);
         base_nodes->AddAnisoHess(kNode, i+2, hesTri[2] * rap);
@@ -5881,8 +5881,8 @@ void CSolver::SetGradient_L2Proj3(CGeometry *geometry, CConfig *config){
       for (unsigned short iNode=0; iNode<4; ++iNode) {
         const unsigned long kNode = geometry->elem[iElem]->GetNode(iNode);
         const su2double Vol = geometry->node[kNode]->GetVolume();
-        const su2double rap = 1./(Vol*24.);
-        // const su2double rap = Vol/24.;
+        // const su2double rap = 1./(Vol*24.);
+        const su2double rap = Vol/24.;
         base_nodes->AddAnisoGrad(kNode, i+0, graTet[0] * rap);
         base_nodes->AddAnisoGrad(kNode, i+1, graTet[1] * rap);
         base_nodes->AddAnisoGrad(kNode, i+2, graTet[2] * rap);
@@ -6012,8 +6012,8 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
       for (unsigned short iNode=0; iNode<4; ++iNode) {
         const unsigned long kNode = geometry->elem[iElem]->GetNode(iNode);
         const su2double Vol = geometry->node[kNode]->GetVolume();
-        const su2double rap = 1./(Vol*24.);
-        // const su2double rap = Vol/24.;
+        // const su2double rap = 1./(Vol*24.);
+        const su2double rap = Vol/24.;
         base_nodes->AddAnisoHess(kNode, i+0, hesTet[0] * rap);
         base_nodes->AddAnisoHess(kNode, i+1, hesTet[1] * rap);
         base_nodes->AddAnisoHess(kNode, i+2, hesTet[2] * rap);
