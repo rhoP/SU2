@@ -5693,7 +5693,7 @@ void CSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config){
 
 void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
 
-  unsigned long iPoint, nPoint = geometry->GetnPoint(), nPointDomain = geometry->GetnPointDomain(), iElem, nElem = geometry->GetnElem();
+  unsigned long iPoint, nPoint = geometry->GetnPoint(), nPointDomain = geometry->GetnPointDomain(), iElem, nElem = geometry->GetnElem(), iVertex;
   unsigned short iVar, iDim, iMarker;
   unsigned short nMetr = 3;
   su2double vnx[3], vny[3];
