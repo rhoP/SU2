@@ -5827,7 +5827,7 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
           su2double hess[nVar*nMetr];
           for (iNeigh = 0; iNeigh < geometry->node[iPoint]->GetnPoint(); iNeigh++) {
             const unsigned long jPoint = geometry->node[iPoint]->GetPoint(iNeigh);
-            if(!geometry->node[iPoint]->GetBoundary()) {
+            if(!geometry->node[jPoint]->GetBoundary()) {
               for(iVar = 0; iVar < nVar; iVar++){
                 const unsigned short i = iVar*nMetr;
 
