@@ -5834,8 +5834,8 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
                 //--- Reset hessian if first volume node detected
                 if(counter == 0) {
                   hess[i+0] = base_nodes->GetAnisoHess(iPoint, i+0);
-                  hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+0);
-                  hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+0);
+                  hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+1);
+                  hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+2);
                 }
                 hess[i+0] += base_nodes->GetAnisoHess(jPoint, i+0);
                 hess[i+1] += base_nodes->GetAnisoHess(jPoint, i+1);
