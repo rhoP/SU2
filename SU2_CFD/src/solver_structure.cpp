@@ -5833,9 +5833,12 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
 
                 //--- Reset hessian if first volume node detected
                 if(counter == 0) {
-                  hess[i+0] = base_nodes->GetAnisoHess(iPoint, i+0);
-                  hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+1);
-                  hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+2);
+                  hess[i+0] = 0.0;
+                  hess[i+1] = 0.0;
+                  hess[i+2] = 0.0;
+                  // hess[i+0] = base_nodes->GetAnisoHess(iPoint, i+0);
+                  // hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+1);
+                  // hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+2);
                 }
                 hess[i+0] += base_nodes->GetAnisoHess(jPoint, i+0);
                 hess[i+1] += base_nodes->GetAnisoHess(jPoint, i+1);
@@ -5847,9 +5850,12 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
           if(counter > 0) {
             for(iVar = 0; iVar < nVar; iVar++){
               const unsigned short i = iVar*nMetr;
-              base_nodes->SetAnisoHess(iPoint, i+0, hess[i+0]/su2double(counter+1));
-              base_nodes->SetAnisoHess(iPoint, i+1, hess[i+1]/su2double(counter+1));
-              base_nodes->SetAnisoHess(iPoint, i+2, hess[i+2]/su2double(counter+1));
+              base_nodes->SetAnisoHess(iPoint, i+0, hess[i+0]/su2double(counter));
+              base_nodes->SetAnisoHess(iPoint, i+1, hess[i+1]/su2double(counter));
+              base_nodes->SetAnisoHess(iPoint, i+2, hess[i+2]/su2double(counter));
+              // base_nodes->SetAnisoHess(iPoint, i+0, hess[i+0]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+1, hess[i+1]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+2, hess[i+2]/su2double(counter+1));
             }
           }
         }
@@ -6138,12 +6144,18 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
 
                 //--- Reset hessian if first volume node detected
                 if(counter == 0) {
-                  hess[i+0] = base_nodes->GetAnisoHess(iPoint, i+0);;
-                  hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+1);;
-                  hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+2);;
-                  hess[i+3] = base_nodes->GetAnisoHess(iPoint, i+3);;
-                  hess[i+4] = base_nodes->GetAnisoHess(iPoint, i+4);;
-                  hess[i+5] = base_nodes->GetAnisoHess(iPoint, i+5);;
+                  hess[i+0] = 0.0;
+                  hess[i+1] = 0.0;
+                  hess[i+2] = 0.0;
+                  hess[i+3] = 0.0;
+                  hess[i+4] = 0.0;
+                  hess[i+5] = 0.0;
+                  // hess[i+0] = base_nodes->GetAnisoHess(iPoint, i+0);;
+                  // hess[i+1] = base_nodes->GetAnisoHess(iPoint, i+1);;
+                  // hess[i+2] = base_nodes->GetAnisoHess(iPoint, i+2);;
+                  // hess[i+3] = base_nodes->GetAnisoHess(iPoint, i+3);;
+                  // hess[i+4] = base_nodes->GetAnisoHess(iPoint, i+4);;
+                  // hess[i+5] = base_nodes->GetAnisoHess(iPoint, i+5);;
                 }
                 hess[i+0] += base_nodes->GetAnisoHess(jPoint, i+0);
                 hess[i+1] += base_nodes->GetAnisoHess(jPoint, i+1);
@@ -6164,6 +6176,12 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
               base_nodes->SetAnisoHess(iPoint, i+3, hess[i+3]/su2double(counter));
               base_nodes->SetAnisoHess(iPoint, i+4, hess[i+4]/su2double(counter));
               base_nodes->SetAnisoHess(iPoint, i+5, hess[i+5]/su2double(counter));
+              // base_nodes->SetAnisoHess(iPoint, i+0, hess[i+0]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+1, hess[i+1]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+2, hess[i+2]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+3, hess[i+3]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+4, hess[i+4]/su2double(counter+1));
+              // base_nodes->SetAnisoHess(iPoint, i+5, hess[i+5]/su2double(counter+1));
             }
           }
         }
