@@ -340,6 +340,11 @@ public:
   void UpdateSolution_BGS(CGeometry *geometry, CConfig *config);
 
   /*!
+   * \brief Apply a correction to the boundary Hessian using the volume Hessian.
+   */
+  void CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config);
+
+  /*!
    * \brief Apply a correction to the boundary metric using the volume metric.
    */
   void CorrectBoundAnisoMetr(CGeometry *geometry, CConfig *config);
