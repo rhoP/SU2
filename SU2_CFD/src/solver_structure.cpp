@@ -6146,7 +6146,7 @@ void CSolver::CorrectBoundAnisoMetr(CGeometry *geometry, CConfig *config) {
               //--- Reset hessian if first volume node detected
               if(counter == 0) {
                 for(iMetr = 0; iMetr < nMetr; iMetr++) {
-                  metr[iMetr] = base_nodes->GetAnisoMetr(iPoint, iMetr);
+                  metr[iMetr] = 0.0;
                 }
               }
               for(iMetr = 0; iMetr < nMetr; iMetr++) {
@@ -6157,7 +6157,7 @@ void CSolver::CorrectBoundAnisoMetr(CGeometry *geometry, CConfig *config) {
           }
           if(counter > 0) {
             for(iMetr = 0; iMetr < nMetr; iMetr++) {
-              base_nodes->SetAnisoMetr(iPoint, iMetr, metr[iMetr]/su2double(counter+1));
+              base_nodes->SetAnisoMetr(iPoint, iMetr, metr[iMetr]/su2double(counter));
             }
           }
         }
