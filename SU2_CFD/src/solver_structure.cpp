@@ -1937,6 +1937,10 @@ void CSolver::InitiateComms(CGeometry *geometry,
       COUNT_PER_POINT  = nDim*nVar;
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
+    case ANISO_HESSIAN:
+      COUNT_PER_POINT  = 3*(nDim-1)*nVar;
+      MPI_TYPE         = COMM_TYPE_DOUBLE;
+      break;
     default:
       SU2_MPI::Error("Unrecognized quantity for point-to-point MPI comms.",
                      CURRENT_FUNCTION);
@@ -2083,6 +2087,11 @@ void CSolver::InitiateComms(CGeometry *geometry,
             for (iDim = 0; iDim < nDim; iDim++)
               for (iVar = 0; iVar < nVar; iVar++)
                 bufDSend[buf_offset+iVar*nDim+iDim] = base_nodes->GetAnisoGrad(iPoint, iVar*nDim+iDim);
+            break;
+          case ANISO_HESSIAN:
+            for (iDim = 0; iDim < 3*(nDim-1); iDim++)
+              for (iVar = 0; iVar < nVar; iVar++)
+                bufDSend[buf_offset+iVar*3*(nDim-1)+iDim] = base_nodes->GetAnisoHess(iPoint, iVar*3*(nDim-1)+iDim);
             break;
           default:
             SU2_MPI::Error("Unrecognized quantity for point-to-point MPI comms.",
@@ -2254,6 +2263,11 @@ void CSolver::CompleteComms(CGeometry *geometry,
             for (iDim = 0; iDim < nDim; iDim++)
               for (iVar = 0; iVar < nVar; iVar++)
                 base_nodes->SetAnisoGrad(iPoint, iVar*nDim+iDim, bufDRecv[buf_offset+iVar*nDim+iDim]);
+            break;
+          case ANISO_HESSIAN:
+            for (iDim = 0; iDim < 3*(nDim-1); iDim++)
+              for (iVar = 0; iVar < nVar; iVar++)
+                base_nodes->SetAnisoGrad(iPoint, iVar*3*(nDim-1)+iDim, bufDRecv[buf_offset+iVar*3*(nDim-1)+iDim]);
             break;
           default:
             SU2_MPI::Error("Unrecognized quantity for point-to-point MPI comms.",
@@ -5807,6 +5821,11 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
       base_nodes->SetAnisoHess(iPoint, i+2, A[1][1]);
     }
   }
+
+  /*--- Communicate the Hessian values via MPI. ---*/
+  
+  InitiateComms(geometry, config, ANISO_HESSIAN);
+  CompleteComms(geometry, config, ANISO_HESSIAN);
 }
 
 void CSolver::SetGradient_L2Proj3(CGeometry *geometry, CConfig *config){
@@ -6063,6 +6082,11 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
       base_nodes->SetAnisoHess(iPoint, i+5, A[2][2]);
     }
   }
+
+  /*--- Communicate the Hessian values via MPI. ---*/
+  
+  InitiateComms(geometry, config, ANISO_HESSIAN);
+  CompleteComms(geometry, config, ANISO_HESSIAN);
 }
 
 void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
