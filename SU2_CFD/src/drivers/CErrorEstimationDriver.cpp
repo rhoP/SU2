@@ -754,10 +754,10 @@ void CErrorEstimationDriver::ComputeMetric() {
     solver_flow->SetHessian_L2Proj2(geometry[ZONE_0][INST_0][MESH_0], 
                                     config[ZONE_0]);
 
-    //---Surface flow Hess correction
-    if(rank == MASTER_NODE) cout << "Correcting flow surface Hessian." << endl;
-    solver_flow->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
-                                       config[ZONE_0]);
+    // //---Surface flow Hess correction
+    // if(rank == MASTER_NODE) cout << "Correcting flow surface Hessian." << endl;
+    // solver_flow->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
+    //                                    config[ZONE_0]);
 
     if(config[ZONE_0]->GetViscous()) {
       //--- Volume turb grad
@@ -770,10 +770,10 @@ void CErrorEstimationDriver::ComputeMetric() {
       solver_turb->SetHessian_L2Proj2(geometry[ZONE_0][INST_0][MESH_0], 
                                       config[ZONE_0]);
 
-      //---Surface turb Hess correction
-      if(rank == MASTER_NODE) cout << "Correcting turbulent surface Hessian." << endl;
-      solver_turb->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
-                                         config[ZONE_0]);
+      // //---Surface turb Hess correction
+      // if(rank == MASTER_NODE) cout << "Correcting turbulent surface Hessian." << endl;
+      // solver_turb->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
+      //                                    config[ZONE_0]);
     }
 
     //--- Metric
@@ -793,10 +793,10 @@ void CErrorEstimationDriver::ComputeMetric() {
     solver_flow->SetHessian_L2Proj3(geometry[ZONE_0][INST_0][MESH_0], 
                                     config[ZONE_0]);
 
-    //---Surface flow Hess correction
-    if(rank == MASTER_NODE) cout << "Correcting flow surface Hessian." << endl;
-    solver_flow->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
-                                       config[ZONE_0]);
+    // //---Surface flow Hess correction
+    // if(rank == MASTER_NODE) cout << "Correcting flow surface Hessian." << endl;
+    // solver_flow->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
+    //                                    config[ZONE_0]);
 
     if(config[ZONE_0]->GetViscous()) {
       //--- Volume turb grad
@@ -809,10 +809,10 @@ void CErrorEstimationDriver::ComputeMetric() {
       solver_turb->SetHessian_L2Proj3(geometry[ZONE_0][INST_0][MESH_0], 
                                       config[ZONE_0]);
 
-      //---Surface turb Hess correction
-      if(rank == MASTER_NODE) cout << "Correcting turbulent surface Hessian." << endl;
-      solver_turb->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
-                                         config[ZONE_0]);
+      // //---Surface turb Hess correction
+      // if(rank == MASTER_NODE) cout << "Correcting turbulent surface Hessian." << endl;
+      // solver_turb->CorrectBoundAnisoHess(geometry[ZONE_0][INST_0][MESH_0], 
+      //                                    config[ZONE_0]);
     }
 
     //--- Metric
