@@ -6094,7 +6094,7 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
 }
 
 void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
-  unsigned short iVar, iMetr, iMarker;
+  unsigned short iVar, iMetr, iDim, iMarker;
   unsigned short nMetr = 3*(nDim-1);
   unsigned long iVertex;
   bool viscous = config->GetViscous();
@@ -6113,7 +6113,7 @@ void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
           
           //--- Correct if any of the neighbors belong to the volume
           unsigned short iNeigh, counter = 0;
-          su2double hess[nVar*nMetr];
+          su2double hess[nVar*nMetr], dist, distsum = 0.0;
           for (iNeigh = 0; iNeigh < geometry->node[iPoint]->GetnPoint(); iNeigh++) {
             const unsigned long jPoint = geometry->node[iPoint]->GetPoint(iNeigh);
             if(!geometry->node[jPoint]->GetBoundary()) {
@@ -6126,9 +6126,16 @@ void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
                     hess[i+iMetr] = 0.0;
                   }
                 }
-                for(iMetr = 0; iMetr < nMetr; iMetr++) {
-                  hess[i+iMetr] += base_nodes->GetAnisoHess(jPoint, i+iMetr);
+                dist = 0.0;
+                for(iDim = 0; iDim < nDim; iDim++) {
+                  const su2double coord0 = geometry->node[iPoint]->GetCoord(iDim);
+                  const su2double coord1 = geometry->node[jPoint]->GetCoord(iDim);
+                  dist += (coord1-coord0)*(coord1-coord0);
                 }
+                for(iMetr = 0; iMetr < nMetr; iMetr++) {
+                  hess[i+iMetr] += base_nodes->GetAnisoHess(jPoint, i+iMetr)/dist;
+                }
+                distsum += dist;
                 counter ++;
               }
             }
@@ -6137,7 +6144,8 @@ void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
             for(iVar = 0; iVar < nVar; iVar++) {
               const unsigned short i = iVar*nMetr;
               for(iMetr = 0; iMetr < nMetr; iMetr++) {
-                base_nodes->SetAnisoHess(iPoint, i+iMetr, hess[i+iMetr]/su2double(counter));
+                // base_nodes->SetAnisoHess(iPoint, i+iMetr, hess[i+iMetr]/su2double(counter));
+                base_nodes->SetAnisoHess(iPoint, i+iMetr, hess[i+iMetr]*distsum);
               }
             }
           }
