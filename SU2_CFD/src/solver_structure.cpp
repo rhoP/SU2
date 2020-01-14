@@ -5798,13 +5798,6 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
     }
   }
 
-  /*--- Communicate the Hessian values via MPI. ---*/
-  
-  InitiateComms(geometry, config, ANISO_HESSIAN);
-  CompleteComms(geometry, config, ANISO_HESSIAN);
-
-  CorrectBoundAnisoHess(geometry, config);
-
   //--- Make positive definite matrix
   for (iPoint = 0; iPoint < nPointDomain; ++iPoint) {
     for(iVar = 0; iVar < nVar; iVar++){
@@ -5828,6 +5821,13 @@ void CSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
       base_nodes->SetAnisoHess(iPoint, i+2, A[1][1]);
     }
   }
+
+  /*--- Communicate the Hessian values via MPI. ---*/
+  
+  InitiateComms(geometry, config, ANISO_HESSIAN);
+  CompleteComms(geometry, config, ANISO_HESSIAN);
+
+  CorrectBoundAnisoHess(geometry, config);
 }
 
 void CSolver::SetGradient_L2Proj3(CGeometry *geometry, CConfig *config){
@@ -6045,13 +6045,6 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
     }
   }
 
-  /*--- Communicate the Hessian values via MPI. ---*/
-  
-  InitiateComms(geometry, config, ANISO_HESSIAN);
-  CompleteComms(geometry, config, ANISO_HESSIAN);
-
-  CorrectBoundAnisoHess(geometry, config);
-
   //--- Make positive definite matrix
   su2double **A      = new su2double*[nDim],
             **EigVec = new su2double*[nDim], 
@@ -6091,6 +6084,13 @@ void CSolver::SetHessian_L2Proj3(CGeometry *geometry, CConfig *config){
       base_nodes->SetAnisoHess(iPoint, i+5, A[2][2]);
     }
   }
+
+  /*--- Communicate the Hessian values via MPI. ---*/
+  
+  InitiateComms(geometry, config, ANISO_HESSIAN);
+  CompleteComms(geometry, config, ANISO_HESSIAN);
+
+  CorrectBoundAnisoHess(geometry, config);
 }
 
 void CSolver::CorrectBoundAnisoHess(CGeometry *geometry, CConfig *config) {
