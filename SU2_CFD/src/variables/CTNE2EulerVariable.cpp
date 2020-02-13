@@ -162,7 +162,10 @@ CTNE2EulerVariable::CTNE2EulerVariable(su2double val_pressure,
   Cvves.resize(nPoint, nSpecies) = su2double(0.0);
   eves.resize(nPoint, nSpecies)  = su2double(0.0);
   //Secondary.resize(nPoint,nSecondaryVar) = su2double(0.0);
-  Source.resize(nPoint,nVar) = su2double(0.0);
+  /*--- Reactants and products -> 6      ---
+    --- Density and energy -> nSpecies+1 ---
+    --- Vib-relax -> 1                   ---*/
+  Source.resize(nPoint,6*(nSpecies+1)+1) = su2double(0.0);
   /*--- Compressible flow, gradients primitive variables ---*/
 
   Gradient_Primitive.resize(nPoint,nPrimVarGrad,nDim,0.0);
@@ -303,14 +306,19 @@ CTNE2EulerVariable::CTNE2EulerVariable(su2double val_pressure,
   }
 
   if (config->GetError_Estimate() || config->GetKind_SU2() == SU2_MET) {
+    AnisoGrad.resize(nPoint,nDim*(nVar+1)*nDim) = su2double(0.0);
+    AnisoHess.resize(nPoint,3*(nDim-1)*(nVar+1)*nDim) = su2double(0.0);
     AnisoMetr.resize(nPoint,3*(nDim-1)) = su2double(0.0);
     if(config->GetViscous()) {
       AnisoViscGrad.resize(nPoint,nDim*nVar*nDim) = su2double(0.0);
       AnisoViscHess.resize(nPoint,3*(nDim-1)*nVar*nDim) = su2double(0.0);
     }
     if(config->GetAdap_Source()) {
-      AnisoSourceGrad.resize(nPoint,nDim*nVar) = su2double(0.0);
-      AnisoSourceHess.resize(nPoint, 3*(nDim-1)*nVar) = su2double(0.0);
+      /*--- Reactants and products -> 6      ---
+        --- Density and energy -> nSpecies+1 ---
+        --- Vib-relax -> 1                   ---*/
+      AnisoSourceGrad.resize(nPoint,nDim*(6*(nSpecies+1)+1)) = su2double(0.0);
+      AnisoSourceHess.resize(nPoint, 3*(nDim-1)*(6*(nSpecies+1)+1)) = su2double(0.0);
     }
   }
 
