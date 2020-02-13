@@ -1940,7 +1940,7 @@ void CSolver::InitiateComms(CGeometry *geometry,
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
     case ANISO_GRADIENT_SOURCE:
-      COUNT_PER_POINT  = nDim*(6*(nSpecies+1)+1);
+      COUNT_PER_POINT  = nDim*(6*(nSpecies+1)+nSpecies);
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
     case ANISO_HESSIAN:
@@ -1949,7 +1949,7 @@ void CSolver::InitiateComms(CGeometry *geometry,
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
     case ANISO_HESSIAN_SOURCE:
-      COUNT_PER_POINT  = 3*(nDim-1)*(6*(nSpecies+1)+1);
+      COUNT_PER_POINT  = 3*(nDim-1)*(6*(nSpecies+1)+nSpecies);
       MPI_TYPE         = COMM_TYPE_DOUBLE;
       break;
     case ANISO_METRIC:
@@ -2116,7 +2116,7 @@ void CSolver::InitiateComms(CGeometry *geometry,
             break;
           case ANISO_GRADIENT_SOURCE:
             for (iDim = 0; iDim < nDim; iDim++)
-              for (iVar = 0; iVar < (6*(nSpecies+1)+1); iVar++)
+              for (iVar = 0; iVar < (6*(nSpecies+1)+nSpecies); iVar++)
                 bufDSend[buf_offset+iVar*nDim+iDim] = base_nodes->GetAnisoSourceGrad(iPoint, iVar*nDim+iDim);
             break;
           case ANISO_HESSIAN:
@@ -2133,7 +2133,7 @@ void CSolver::InitiateComms(CGeometry *geometry,
             break;
           case ANISO_HESSIAN_SOURCE:
             for (iDim = 0; iDim < 3*(nDim-1); iDim++)
-              for (iVar = 0; iVar < (6*(nSpecies+1)+1); iVar++)
+              for (iVar = 0; iVar < (6*(nSpecies+1)+nSpecies); iVar++)
                 bufDSend[buf_offset+iVar*3*(nDim-1)+iDim] = base_nodes->GetAnisoSourceHess(iPoint, iVar*3*(nDim-1)+iDim);
             break;
           case ANISO_METRIC:
@@ -2324,7 +2324,7 @@ void CSolver::CompleteComms(CGeometry *geometry,
             break;
           case ANISO_GRADIENT_SOURCE:
             for (iDim = 0; iDim < nDim; iDim++)
-              for (iVar = 0; iVar < (6*(nSpecies+1)+1); iVar++)
+              for (iVar = 0; iVar < (6*(nSpecies+1)+nSpecies); iVar++)
                 base_nodes->SetAnisoSourceGrad(iPoint, iVar*nDim+iDim, bufDRecv[buf_offset+iVar*nDim+iDim]);
             break;
           case ANISO_HESSIAN:
@@ -2341,7 +2341,7 @@ void CSolver::CompleteComms(CGeometry *geometry,
             break;
           case ANISO_HESSIAN_SOURCE:
             for (iDim = 0; iDim < 3*(nDim-1); iDim++)
-              for (iVar = 0; iVar < (6*(nSpecies+1)+1); iVar++)
+              for (iVar = 0; iVar < (6*(nSpecies+1)+nSpecies); iVar++)
                 base_nodes->SetAnisoSourceHess(iPoint, iVar*3*(nDim-1)+iDim, bufDRecv[buf_offset+iVar*3*(nDim-1)+iDim]);
             break;
           case ANISO_METRIC:

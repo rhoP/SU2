@@ -3552,6 +3552,10 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
         val_residual[iSpecies] += Ms[iSpecies] * (fwdRxn-bkwRxn) * Volume;
         val_residual[nSpecies+nDim+1] += Ms[iSpecies] * (fwdRxn-bkwRxn)
             * eve_i[iSpecies] * Volume;
+
+        val_source[6*iSpecies+ii] = Ms[iSpecies] * (fwdRxn-bkwRxn);
+        val_source[6*nSpecies+ii] = Ms[iSpecies] * (fwdRxn-bkwRxn)
+            * eve_i[iSpecies];
       }
 
       /*--- Reactants ---*/
@@ -3560,12 +3564,16 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
         val_residual[iSpecies] -= Ms[iSpecies] * (fwdRxn-bkwRxn) * Volume;
         val_residual[nSpecies+nDim+1] -= Ms[iSpecies] * (fwdRxn-bkwRxn)
             * eve_i[iSpecies] * Volume;
+
+        val_source[6*iSpecies+3+ii] = -Ms[iSpecies] * (fwdRxn-bkwRxn);
+        val_source[6*nSpecies+3+ii] = -Ms[iSpecies] * (fwdRxn-bkwRxn)
+            * eve_i[iSpecies];
       }
     }
 
-    /*---Set source term ---*/
-    for (iVar = 0; iVar < nVar; iVar++)
-      val_source[iVar] = val_source[iVar]+val_residual[iVar]/Volume;
+    // /*---Set source term ---*/
+    // for (iVar = 0; iVar < nVar; iVar++)
+    //   val_source[iVar] = val_source[iVar]+val_residual[iVar]/Volume;
 
     if (implicit) {
 
@@ -3788,11 +3796,14 @@ void CSource_TNE2::ComputeVibRelaxation(su2double *val_residual,
     /*--- Add species contribution to residual ---*/
     val_residual[nEv] += rhos * (estar[iSpecies] -
                                  eve_i[iSpecies]) / taus[iSpecies] * Volume;
+
+    val_source[6*(nSpecies+1)+iSpecies] = rhos * (estar[iSpecies] -
+                                 eve_i[iSpecies]) / taus[iSpecies];
   }
 
-  /*---Set source term ---*/
-  for (iVar = 0; iVar < nVar; iVar++)
-    val_source[iVar] = val_source[iVar]+val_residual[iVar]/Volume;
+  // /*---Set source term ---*/
+  // for (iVar = 0; iVar < nVar; iVar++)
+  //   val_source[iVar] = val_source[iVar]+val_residual[iVar]/Volume;
 
   if (implicit) {
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {

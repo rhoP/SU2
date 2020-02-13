@@ -164,8 +164,8 @@ CTNE2EulerVariable::CTNE2EulerVariable(su2double val_pressure,
   //Secondary.resize(nPoint,nSecondaryVar) = su2double(0.0);
   /*--- Reactants and products -> 6      ---
     --- Density and energy -> nSpecies+1 ---
-    --- Vib-relax -> 1                   ---*/
-  Source.resize(nPoint,6*(nSpecies+1)+1) = su2double(0.0);
+    --- Vib-relax -> nSpecies            ---*/
+  Source.resize(nPoint,6*(nSpecies+1)+nSpecies) = su2double(0.0);
   /*--- Compressible flow, gradients primitive variables ---*/
 
   Gradient_Primitive.resize(nPoint,nPrimVarGrad,nDim,0.0);
@@ -316,9 +316,9 @@ CTNE2EulerVariable::CTNE2EulerVariable(su2double val_pressure,
     if(config->GetAdap_Source()) {
       /*--- Reactants and products -> 6      ---
         --- Density and energy -> nSpecies+1 ---
-        --- Vib-relax -> 1                   ---*/
-      AnisoSourceGrad.resize(nPoint,nDim*(6*(nSpecies+1)+1)) = su2double(0.0);
-      AnisoSourceHess.resize(nPoint, 3*(nDim-1)*(6*(nSpecies+1)+1)) = su2double(0.0);
+        --- Vib-relax -> nSpecies            ---*/
+      AnisoSourceGrad.resize(nPoint,nDim*(6*(nSpecies+1)+nSpecies)) = su2double(0.0);
+      AnisoSourceHess.resize(nPoint, 3*(nDim-1)*(6*(nSpecies+1)+nSpecies)) = su2double(0.0);
     }
   }
 

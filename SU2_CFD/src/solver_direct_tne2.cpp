@@ -260,7 +260,7 @@ CTNE2EulerSolver::CTNE2EulerSolver(CGeometry *geometry, CConfig *config, unsigne
   Secondary_j = new su2double[nSecondaryVar]; for (iVar = 0; iVar < nSecondaryVar; iVar++) Secondary_j[iVar] = 0.0;
 
   /*--- Define some auxiliary vectors related to the Source term evolution ---*/
-  Source      = new su2double[nVar]; for (iVar = 0; iVar < nVar; iVar++) Source[iVar] = 0.0;
+  Source      = new su2double[6*(nSpecies+1)+nSpecies]; for (iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++) Source[iVar] = 0.0;
 
   /*--- Define some auxiliary vectors related to the undivided lapalacian ---*/
   if (config->GetKind_ConvNumScheme_TNE2() == SPACE_CENTERED) {
@@ -1479,7 +1479,7 @@ void CTNE2EulerSolver::Source_Residual(CGeometry *geometry, CSolver **solution_c
 
     /*--- Initialize the source residual to zero ---*/
     for (iVar = 0; iVar < nVar; iVar++) Residual[iVar] = 0.0;
-    for (iVar = 0; iVar < nVar; iVar++) Source[iVar] = 0.0;
+    for (iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++) Source[iVar] = 0.0;
 
     /*--- Set conserved & primitive variables  ---*/
     numerics->SetConservative(nodes->GetSolution(iPoint),   nodes->GetSolution(iPoint));
@@ -2871,7 +2871,7 @@ void CTNE2EulerSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config)
   su2double density, *densitys, velocity[2], pressure, enthalpy, rhoeve;
   su2double vnx[3], vny[3];
   su2double graTri[2], graTriVisc[2], graTriSource[2];
-  su2double Crd[3][2], Sens[3][nVarMetr][nFluxMetr], SensVisc[3][nVarMetr][nFluxMetr], SensSource[3][6*(nSpecies+1)+1];
+  su2double Crd[3][2], Sens[3][nVarMetr][nFluxMetr], SensVisc[3][nVarMetr][nFluxMetr], SensSource[3][6*(nSpecies+1)+nSpecies];
   bool dummy_bool;
   bool viscous = config->GetViscous(), source = config->GetAdap_Source();
 
@@ -2915,7 +2915,7 @@ void CTNE2EulerSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config)
       Sens[iNode][nSpecies+4][1] = pressure;
 
       if(source) {
-        for(iVar = 0; iVar < 6*(nSpecies+1)+1; iVar++) {
+        for(iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++) {
           SensSource[iNode][iVar] = nodes->GetSource(kNode)[iVar];
         }
       }
@@ -2973,7 +2973,7 @@ void CTNE2EulerSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config)
     }
 
     if(source) {
-      for(iVar = 0; iVar < 6*(nSpecies+1)+1; iVar++){
+      for(iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++){
         graTriSource[0] = SensSource[0][iVar]*vnx[0] + SensSource[1][iVar]*vnx[1] + SensSource[2][iVar]*vnx[2];
         graTriSource[1] = SensSource[0][iVar]*vny[0] + SensSource[1][iVar]*vny[1] + SensSource[2][iVar]*vny[2];
         //--- assembling
@@ -3009,7 +3009,7 @@ void CTNE2EulerSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
   unsigned short nMetr = 3;
   su2double vnx[3], vny[3];
   su2double hesTri[3], hesTriVisc[3], hesTriSource[3];
-  su2double Crd[3][2], Grad[3][2][nVarMetr][nFluxMetr], GradVisc[3][2][nVarMetr][nFluxMetr], GradSource[3][2][6*(nSpecies+1)+1];
+  su2double Crd[3][2], Grad[3][2][nVarMetr][nFluxMetr], GradVisc[3][2][nVarMetr][nFluxMetr], GradSource[3][2][6*(nSpecies+1)+nSpecies];
   bool viscous = config->GetViscous(), source = config->GetAdap_Source();
 
   su2double **A      = new su2double*[nDim],
@@ -3039,7 +3039,7 @@ void CTNE2EulerSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
         }
       }
       if(source){
-        for(iVar = 0; iVar < 6*(nSpecies+1)+1; iVar++){
+        for(iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++){
           const unsigned short i = iVar*nDim;
           GradSource[iNode][0][iVar] = nodes->GetAnisoSourceGrad(kNode, i+0);
           GradSource[iNode][1][iVar] = nodes->GetAnisoSourceGrad(kNode, i+1);
@@ -3124,7 +3124,7 @@ void CTNE2EulerSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
       }
     }
     if(source){
-      for(iVar = 0; iVar < 6*(nSpecies+1)+1; iVar++){
+      for(iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++){
         hesTriSource[0] =         GradSource[0][0][iVar]*vnx[0] 
                                 + GradSource[1][0][iVar]*vnx[1] 
                                 + GradSource[2][0][iVar]*vnx[2];
@@ -3191,7 +3191,7 @@ void CTNE2EulerSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
 
   if(source) {
     for (iPoint = 0; iPoint < nPointDomain; ++iPoint) {
-      for(iVar = 0; iVar < 6*(nSpecies+1)+1; iVar++){
+      for(iVar = 0; iVar < 6*(nSpecies+1)+nSpecies; iVar++){
         const unsigned short i = iVar*nMetr;
 
         const su2double a = nodes->GetAnisoSourceHess(iPoint, i+0);
