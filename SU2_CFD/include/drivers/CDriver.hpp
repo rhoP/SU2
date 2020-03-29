@@ -38,6 +38,7 @@
 #include "../../../Common/include/geometry/CGeometry.hpp"
 #include "../../../Common/include/grid_movement_structure.hpp"
 #include "../../../Common/include/interpolation_structure.hpp"
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 
 using namespace std;
 
@@ -101,6 +102,7 @@ protected:
             PyWrapNodalForceDensity[3],         /*!< \brief This is used to store the force density at each vertex. */
             PyWrapNodalHeatFlux[3];             /*!< \brief This is used to store the heat flux at each vertex. */
   bool dry_run;                                 /*!< \brief Flag if SU2_CFD was started as dry-run via "SU2_CFD -d <config>.cfg" */
+  CTurbML *MLParams=nullptr;                    /*! <\brief Container of machine learning parameters for turbulence modeling*/
 
 public:
 

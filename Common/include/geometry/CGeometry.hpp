@@ -49,6 +49,7 @@ extern "C" {
 #include <stdlib.h>
 #include <climits>
 
+
 #include "primal_grid/CPrimalGrid.hpp"
 #include "dual_grid/CDualGrid.hpp"
 #include "dual_grid/CPoint.hpp"
@@ -59,6 +60,7 @@ extern "C" {
 #include "../CConfig.hpp"
 #include "../geometry_structure_fem_part.hpp"
 #include "../toolboxes/graph_toolbox.hpp"
+#include "../turbulence_parameter_structure.hpp"
 
 using namespace std;
 
@@ -597,6 +599,14 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   inline virtual void SetRCM_Ordering(CConfig *config) {}
+
+  /*!
+   * \brief Overload: Orders the RCM along with turbulence parameters.
+   * \param[in] config - Definition of the particular problem.
+   * \param[in] param_container - container with machine learning parameters.
+
+   */
+  inline virtual void SetRCM_Ordering(CConfig *config, CTurbML *&param_container) {}
 
   /*!
    * \brief Connects elements  .

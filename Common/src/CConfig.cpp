@@ -1924,6 +1924,8 @@ void CConfig::SetConfig_Options() {
   addStringOption("MESH_FILENAME", Mesh_FileName, string("mesh.su2"));
   /*!\brief MESH_OUT_FILENAME \n DESCRIPTION: Mesh output file name. Used when converting, scaling, or deforming a mesh. \n DEFAULT: mesh_out.su2 \ingroup Config*/
   addStringOption("MESH_OUT_FILENAME", Mesh_Out_FileName, string("mesh_out.su2"));
+  /* DESCRIPTION:  Machine learning parameter input file */
+  addStringOption("MLPARAM_FILENAME", MLParam_FileName, string("ml_param.su2"));
 
   /* DESCRIPTION: List of the number of grid points in the RECTANGLE or BOX grid in the x,y,z directions. (default: (33,33,33) ). */
   addShortListOption("MESH_BOX_SIZE", nMesh_Box_Size, Mesh_Box_Size);
@@ -5589,6 +5591,8 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
           case SA_E_COMP: cout << "Compressibility Correction Edwards Spalart Allmaras" << endl; break;
           case SST:       cout << "Menter's SST"     << endl; break;
           case SST_SUST:  cout << "Menter's SST with sustaining terms" << endl; break;
+          case SA_ML:     cout << "Spalart Allmaras Model with Machine Learning" << endl
+                               << "Input file name for machine learning parameters: " << MLParam_FileName << endl;break;
         }
         if (QCR) cout << "Using Quadratic Constitutive Relation, 2000 version (QCR2000)" << endl;
         cout << "Hybrid RANS/LES: ";

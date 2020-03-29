@@ -825,7 +825,8 @@ enum ENUM_TURB_MODEL {
   SA_COMP   = 4,     /*!< \brief Kind of Turbulent model (Spalart-Allmaras Compressibility Correction). */
   SA_E_COMP = 5,     /*!< \brief Kind of Turbulent model (Spalart-Allmaras Edwards with Compressibility Correction). */
   SST       = 6,     /*!< \brief Kind of Turbulence model (Menter SST). */
-  SST_SUST  = 7      /*!< \brief Kind of Turbulence model (Menter SST with sustaining terms for free-stream preservation). */
+  SST_SUST  = 7,     /*!< \brief Kind of Turbulence model (Menter SST with sustaining terms for free-stream preservation). */
+  SA_ML     = 8      /*!< \brief Kind of Turbulence model (ML on Spalart-Allmaras). */
 };
 static const MapType<string, ENUM_TURB_MODEL> Turb_Model_Map = {
   MakePair("NONE", NO_TURB_MODEL)
@@ -836,6 +837,7 @@ static const MapType<string, ENUM_TURB_MODEL> Turb_Model_Map = {
   MakePair("SA_E_COMP", SA_E_COMP)
   MakePair("SST", SST)
   MakePair("SST_SUST", SST_SUST)
+  MakePair("SA_ML", SA_ML)
 };
 
 /*!
