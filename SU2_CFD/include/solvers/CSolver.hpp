@@ -4720,6 +4720,26 @@ public:
    */
   inline virtual bool GetHasHybridParallel() const { return false; }
 
+    /*!
+     * \brief Get Machine Learning Parameter.
+     * \param[in] point_index: index of the point.
+     * \param[out] returns the ML Parameter value of the index.
+     */
+    virtual su2double GetMLParam(unsigned long point_index) {return 0.0;}
+
+    /*!
+     * \brief Set Machine Learning Parameter.
+     * \param[in] point_index: index of the point.
+     * \param[in] val_param: new value to be set.
+     */
+    virtual void SetMLParam(unsigned long point_index, su2double val_param) {};
+
+    /*!
+       * \brief Get parameter sensitivity.
+       * \param[in] point_index: index of the point.
+       * \param[out] returns the sensitivity of the indexed ML parameter.
+       */
+    virtual su2double GetMLParamSens(unsigned long point_index){return 0.0;}
 protected:
   /*!
    * \brief Allocate the memory for the verification solution, if necessary.
