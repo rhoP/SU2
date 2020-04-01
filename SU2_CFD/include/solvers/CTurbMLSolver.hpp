@@ -1,7 +1,7 @@
 /*!
  * \file CTurbSASolver.hpp
  * \brief Headers of the CTurbMLSolver class
- * \author R. Pochampalli
+ * \author  A. Bueno, R. Pochampalli
  * \version 7.0.2 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
@@ -31,9 +31,19 @@
 #include "CTurbSolver.hpp"
 
 
-class CTurbSA_MLSolver: public CTurbSolver {
+class CTurbSA_MLSolver final : public CTurbSolver {
 private:
     su2double nu_tilde_Inf, nu_tilde_Engine, nu_tilde_ActDisk;
+
+    /*!
+     * \brief A virtual member.
+     * \param[in] solver - Solver container
+     * \param[in] geometry - Geometrical definition.
+     * \param[in] config - Definition of the particular problem.
+     */
+     void SetDES_LengthScale(CSolver** solver,
+                             CGeometry *geometry,
+                             CConfig *config);
 
 public:
     /*!
@@ -48,7 +58,11 @@ public:
      * \param[in] iMesh - Index of the mesh in multigrid computations.
      * \param[in] FluidModel
      */
-    CTurbSA_MLSolver(CGeometry *geometry, CConfig *config, unsigned short iMesh, CFluidModel* FluidModel, CTurbML *param_container);
+    CTurbSA_MLSolver(CGeometry *geometry,
+                     CConfig *config,
+                     unsigned short iMesh,
+                     CFluidModel* FluidModel,
+                     CTurbML *param_container);
 
     /*!
      * \brief Destructor of the class.
@@ -65,7 +79,13 @@ public:
      * \param[in] RunTime_EqSystem - System of equations which is going to be solved.
      * \param[in] Output - boolean to determine whether to print output.
      */
-    void Preprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config, unsigned short iMesh, unsigned short iRKStep, unsigned short RunTime_EqSystem, bool Output);
+    void Preprocessing(CGeometry *geometry,
+                       CSolver **solver_container,
+                       CConfig *config,
+                       unsigned short iMesh,
+                       unsigned short iRKStep,
+                       unsigned short RunTime_EqSystem,
+                       bool Output) override;
 
     /*!
      * \brief A virtual member.
@@ -73,8 +93,10 @@ public:
      * \param[in] solver_container - Container vector with all the solutions.
      * \param[in] config - Definition of the particular problem.
      */
-    void Postprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config,
-                        unsigned short iMesh);
+    void Postprocessing(CGeometry *geometry,
+                        CSolver **solver_container,
+                        CConfig *config,
+                        unsigned short iMesh) override;
 
     /*!
      * \brief Source term computation.
@@ -85,8 +107,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] iMesh - Index of the mesh in multigrid computations.
      */
-    void Source_Residual(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics, CNumerics *second_numerics,
-                         CConfig *config, unsigned short iMesh);
+    void Source_Residual(CGeometry *geometry,
+                         CSolver **solver_container,
+                         CNumerics *numerics,
+                         CNumerics *second_numerics,
+                         CConfig *config,
+                         unsigned short iMesh) override;
 
     /*!
      * \brief Source term computation.
@@ -96,8 +122,11 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] iMesh - Index of the mesh in multigrid computations.
      */
-    void Source_Template(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics,
-                         CConfig *config, unsigned short iMesh);
+    void Source_Template(CGeometry *geometry,
+                         CSolver **solver_container,
+                         CNumerics *numerics,
+                         CConfig *config,
+                         unsigned short iMesh) override;
 
     /*!
      * \brief Impose the Navier-Stokes wall boundary condition.
@@ -108,8 +137,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                          unsigned short val_marker);
+    void BC_HeatFlux_Wall(CGeometry *geometry,
+                          CSolver **solver_container,
+                          CNumerics *conv_numerics,
+                          CNumerics *visc_numerics,
+                          CConfig *config,
+                          unsigned short val_marker) override;
 
     /*!
      * \brief Impose the Navier-Stokes wall boundary condition.
@@ -120,8 +153,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                            unsigned short val_marker);
+    void BC_Isothermal_Wall(CGeometry *geometry,
+                            CSolver **solver_container,
+                            CNumerics *conv_numerics,
+                            CNumerics *visc_numerics,
+                            CConfig *config,
+                            unsigned short val_marker) override;
 
     /*!
      * \brief Impose the Far Field boundary condition.
@@ -132,8 +169,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Far_Field(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                      unsigned short val_marker);
+    void BC_Far_Field(CGeometry *geometry,
+                      CSolver **solver_container,
+                      CNumerics *conv_numerics,
+                      CNumerics *visc_numerics,
+                      CConfig *config,
+                      unsigned short val_marker) override;
 
     /*!
      * \brief Impose the inlet boundary condition.
@@ -144,8 +185,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Inlet(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                  unsigned short val_marker);
+    void BC_Inlet(CGeometry *geometry,
+                  CSolver **solver_container,
+                  CNumerics *conv_numerics,
+                  CNumerics *visc_numerics,
+                  CConfig *config,
+                  unsigned short val_marker) override;
 
     /*!
      * \brief Impose the inlet boundary condition.
@@ -156,8 +201,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Inlet_Turbo(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                        unsigned short val_marker);
+    void BC_Inlet_Turbo(CGeometry *geometry,
+                        CSolver **solver_container,
+                        CNumerics *conv_numerics,
+                        CNumerics *visc_numerics,
+                        CConfig *config,
+                        unsigned short val_marker) override;
 
     /*!
      * \brief Impose the inlet boundary condition.
@@ -168,8 +217,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Inlet_MixingPlane(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                              unsigned short val_marker);
+    void BC_Inlet_MixingPlane(CGeometry *geometry,
+                              CSolver **solver_container,
+                              CNumerics *conv_numerics,
+                              CNumerics *visc_numerics,
+                              CConfig *config,
+                              unsigned short val_marker) override;
 
     /*!
      * \brief Impose the outlet boundary condition.
@@ -180,8 +233,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Outlet(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config,
-                   unsigned short val_marker);
+    void BC_Outlet(CGeometry *geometry,
+                   CSolver **solver_container,
+                   CNumerics *conv_numerics,
+                   CNumerics *visc_numerics,
+                   CConfig *config,
+                   unsigned short val_marker) override;
 
     /*!
      * \brief Impose the engine inflow boundary condition.
@@ -192,8 +249,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics,
-                          CConfig *config, unsigned short val_marker);
+    void BC_Engine_Inflow(CGeometry *geometry,
+                          CSolver **solver_container,
+                          CNumerics *conv_numerics,
+                          CNumerics *visc_numerics,
+                          CConfig *config,
+                          unsigned short val_marker) override;
 
     /*!
      * \brief Impose the engine exhaust boundary condition.
@@ -204,8 +265,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics,
-                           CConfig *config, unsigned short val_marker);
+    void BC_Engine_Exhaust(CGeometry *geometry,
+                           CSolver **solver_container,
+                           CNumerics *conv_numerics,
+                           CNumerics *visc_numerics,
+                           CConfig *config,
+                           unsigned short val_marker) override;
 
     /*!
      * \brief Impose the interface boundary condition using the residual.
@@ -215,8 +280,11 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics,
-                               CConfig *config, unsigned short val_marker);
+    void BC_Interface_Boundary(CGeometry *geometry,
+                               CSolver **solver_container,
+                               CNumerics *numerics,
+                               CConfig *config,
+                               unsigned short val_marker) override;
 
     /*!
      * \brief Impose the fluid interface boundary condition using tranfer data.
@@ -226,7 +294,11 @@ public:
      * \param[in] visc_numerics - Description of the numerical method.
      * \param[in] config - Definition of the particular problem.
      */
-    void BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics, CConfig *config);
+    void BC_Fluid_Interface(CGeometry *geometry,
+                            CSolver **solver_container,
+                            CNumerics *conv_numerics,
+                            CNumerics *visc_numerics,
+                            CConfig *config) override;
 
     /*!
      * \brief Impose the near-field boundary condition using the residual.
@@ -236,8 +308,11 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics,
-                               CConfig *config, unsigned short val_marker);
+    void BC_NearField_Boundary(CGeometry *geometry,
+                               CSolver **solver_container,
+                               CNumerics *numerics,
+                               CConfig *config,
+                               unsigned short val_marker) override;
 
     /*!
      * \brief Impose an actuator disk inlet boundary condition.
@@ -248,8 +323,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_ActDisk_Inlet(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics,
-                          CConfig *config, unsigned short val_marker);
+    void BC_ActDisk_Inlet(CGeometry *geometry,
+                          CSolver **solver_container,
+                          CNumerics *conv_numerics,
+                          CNumerics *visc_numerics,
+                          CConfig *config,
+                          unsigned short val_marker) override;
 
     /*!
      * \brief Impose an actuator disk outlet boundary condition.
@@ -260,8 +339,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_ActDisk_Outlet(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics,
-                           CConfig *config, unsigned short val_marker);
+    void BC_ActDisk_Outlet(CGeometry *geometry,
+                           CSolver **solver_container,
+                           CNumerics *conv_numerics,
+                           CNumerics *visc_numerics,
+                           CConfig *config,
+                           unsigned short val_marker) override;
 
     /*!
      * \brief Impose an actuator disk inlet boundary condition.
@@ -272,22 +355,22 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void BC_ActDisk(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics, CNumerics *visc_numerics,
-                    CConfig *config, unsigned short val_marker, bool val_inlet_surface);
+    void BC_ActDisk(CGeometry *geometry,
+                    CSolver **solver_container,
+                    CNumerics *conv_numerics,
+                    CNumerics *visc_numerics,
+                    CConfig *config,
+                    unsigned short val_marker,
+                    bool val_inlet_surface) override;
 
     /*!
      * \brief Set the solution using the Freestream values.
      * \param[in] config - Definition of the particular problem.
      */
-    void SetFreeStream_Solution(CConfig *config);
-
-    /*!
-     * \brief A virtual member.
-     * \param[in] solver - Solver container
-     * \param[in] geometry - Geometrical definition.
-     * \param[in] config - Definition of the particular problem.
-     */
-    void SetDES_LengthScale(CSolver** solver, CGeometry *geometry, CConfig *config);
+    void SetFreeStream_Solution(CConfig *config) override {
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint ++)
+            nodes->SetSolution(iPoint, 0, nu_tilde_Inf);
+    }
 
     /*!
      * \brief Store of a set of provided inlet profile values at a vertex.
@@ -295,7 +378,9 @@ public:
      * \param[in] iMarker - Surface marker where the coefficient is computed.
      * \param[in] iVertex - Vertex of the marker <i>iMarker</i> where the inlet is being set.
      */
-    void SetInletAtVertex(su2double *val_inlet, unsigned short iMarker, unsigned long iVertex);
+    void SetInletAtVertex(su2double *val_inlet,
+                          unsigned short iMarker,
+                          unsigned long iVertex) override;
 
     /*!
      * \brief Get the set of value imposed at an inlet.
@@ -311,7 +396,7 @@ public:
                                unsigned short val_kind_marker,
                                string val_marker,
                                CGeometry *geometry,
-                               CConfig *config);
+                               CConfig *config) const override;
 
     /*!
      * \brief Set a uniform inlet profile
@@ -322,13 +407,13 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] iMarker - Surface marker where the coefficient is computed.
      */
-    void SetUniformInlet(CConfig* config, unsigned short iMarker);
+    void SetUniformInlet(CConfig* config, unsigned short iMarker) override;
 
     /*!
      * \brief Get the value of nu tilde at the far-field.
      * \return Value of nu tilde at the far-field.
      */
-    su2double GetNuTilde_Inf(void);
+    su2double GetNuTilde_Inf(void) const override { return nu_tilde_Inf; }
 
     /*!
      * \brief Compute nu tilde from the wall functions.
@@ -339,7 +424,11 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \param[in] val_marker - Surface marker where the boundary condition is applied.
      */
-    void SetNuTilde_WF(CGeometry *geometry, CSolver **solver_container, CNumerics *conv_numerics,
-                       CNumerics *visc_numerics, CConfig *config, unsigned short val_marker);
+    void SetNuTilde_WF(CGeometry *geometry,
+                       CSolver **solver_container,
+                       CNumerics *conv_numerics,
+                       CNumerics *visc_numerics,
+                       CConfig *config,
+                       unsigned short val_marker) override;
 };
 

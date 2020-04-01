@@ -1323,7 +1323,7 @@ public:
    * \param[in] config - Definition of the particular problem.
    * \param[in] val_param - value of the machine learning parameter.
    */
-    virtual void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config, su2double val_param);
+    virtual void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config, su2double val_param) {}
 
 };
 
