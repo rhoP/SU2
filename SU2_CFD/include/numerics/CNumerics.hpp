@@ -32,6 +32,7 @@
 #include <iostream>
 #include <limits>
 #include <cstdlib>
+#include <turbulence_parameter_structure.hpp>
 
 #include "../../../Common/include/CConfig.hpp"
 
@@ -1316,14 +1317,12 @@ public:
   static void tql2(su2double **V, su2double *d, su2double *e, unsigned short n);
 
     /*!
-   * \Overload Residual for source term integration with machine learning .
-   * \param[out] val_residual - Pointer to the total residual.
-   * \param[out] val_Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
-   * \param[out] val_Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] val_param - value of the machine learning parameter.
-   */
-    virtual void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config, su2double val_param) {}
+     * \brief Residual for source term integration with field parameter.
+     * \param[in] config - Definition of the particular problem.
+     * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
+     */
+  inline virtual ResidualType<> ComputeResidual(const CConfig* config, const su2double& val_ml_param) {
+        return ResidualType<>(nullptr,nullptr,nullptr); }
 
 };
 

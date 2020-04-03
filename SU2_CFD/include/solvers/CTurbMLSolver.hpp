@@ -29,11 +29,14 @@
 #pragma once
 
 #include "CTurbSolver.hpp"
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 
 
 class CTurbSA_MLSolver final : public CTurbSolver {
 private:
     su2double nu_tilde_Inf, nu_tilde_Engine, nu_tilde_ActDisk;
+
+    CTurbML *parameter_container = nullptr; /*! <\brief Machine learning parameters*/
 
     /*!
      * \brief A virtual member.
@@ -61,8 +64,7 @@ public:
     CTurbSA_MLSolver(CGeometry *geometry,
                      CConfig *config,
                      unsigned short iMesh,
-                     CFluidModel* FluidModel,
-                     CTurbML *param_container);
+                     CFluidModel* FluidModel);
 
     /*!
      * \brief Destructor of the class.
@@ -109,8 +111,7 @@ public:
      */
     void Source_Residual(CGeometry *geometry,
                          CSolver **solver_container,
-                         CNumerics *numerics,
-                         CNumerics *second_numerics,
+                         CNumerics **numerics_container,
                          CConfig *config,
                          unsigned short iMesh) override;
 

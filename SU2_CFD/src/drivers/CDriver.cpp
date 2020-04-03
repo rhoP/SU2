@@ -402,13 +402,7 @@ void CDriver::Postprocessing() {
   delete [] numerics_container;
   if (rank == MASTER_NODE) cout << "Deleted CNumerics container." << endl;
 
-  if(MLParams != nullptr){
-        delete MLParams;
-        cout << "Deleted machine learning parameter container" << endl;
-  }
-
-
-    for (iZone = 0; iZone < nZone; iZone++) {
+  for (iZone = 0; iZone < nZone; iZone++) {
     for (iInst = 0; iInst < nInst[iZone]; iInst++){
       Integration_Postprocessing(integration_container[iZone],
           geometry_container[iZone][iInst],
@@ -548,7 +542,14 @@ void CDriver::Postprocessing() {
 
   if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
 
-  if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl;
+  if(MLParams != nullptr){
+      delete MLParams;
+      cout << "Deleted machine learning parameter container" << endl;
+  }
+
+
+
+    if (rank == MASTER_NODE) cout << "-------------------------------------------------------------------------" << endl;
 
 
   /*--- Stop the timer and output the final performance summary. ---*/
@@ -833,10 +834,6 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
       unsigned long nPoint = geometry[MESH_0]->GetnPoint();
       MLParams = new CTurbML(config,nPoint);
       cout << MLParams->Get_nParamML() << " Machine learning parameters found." << endl;
-      /*--- Allocate machine learning parameters to each point ---*/
-      //  for(unsigned long Point_iter = 0; Point_iter < nPoint; Point_iter++){
-      //      geometry[MESH_0]->node[Point_iter]->SetMLParam(MLParams->Get_iParamML(Point_iter));
-      //  }
   }
 
   /*--- Renumbering points using Reverse Cuthill McKee ordering ---*/
@@ -848,6 +845,11 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
   }
   else
       geometry[MESH_0]->SetRCM_Ordering(config);
+
+
+  /*--- Assigning the machine learning parameters to a pointer in geometry ---*/
+
+  geometry[MESH_0]->MLParam_Container = MLParams;
 
   /*--- recompute elements surrounding points, points surrounding points ---*/
 
@@ -1488,11 +1490,13 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
 
   /*--- Initialize some useful booleans ---*/
   bool euler, ns, turbulent, adj_euler, adj_ns, adj_turb, fem_euler, fem_ns, fem_turbulent;
-  bool spalart_allmaras, neg_spalart_allmaras, e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras, menter_sst;
+  bool spalart_allmaras, neg_spalart_allmaras, e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras,
+       menter_sst, spalart_allmaras_ml;
   bool fem, heat, transition, template_solver;
 
   euler = ns = turbulent = adj_euler = adj_ns = adj_turb = fem_euler = fem_ns = fem_turbulent = false;
-  spalart_allmaras = neg_spalart_allmaras = e_spalart_allmaras = comp_spalart_allmaras = e_comp_spalart_allmaras = menter_sst = false;
+  spalart_allmaras = neg_spalart_allmaras = e_spalart_allmaras = comp_spalart_allmaras = e_comp_spalart_allmaras = false;
+  menter_sst = spalart_allmaras_ml = false;
   fem = heat = transition = template_solver = false;
 
   /*--- Assign booleans ---*/
@@ -1575,6 +1579,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       case SA_E_COMP: e_comp_spalart_allmaras = true; break;
       case SST:       menter_sst = true;              break;
       case SST_SUST:  menter_sst = true;              break;
+      case SA_ML:     spalart_allmaras_ml=true;       break;
       default:
         SU2_MPI::Error("Specified turbulence model unavailable or none selected", CURRENT_FUNCTION);
         break;
@@ -2000,7 +2005,8 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
         break;
       case SPACE_UPWIND :
         for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          if (spalart_allmaras || neg_spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras ) {
+          if (spalart_allmaras || neg_spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras ||
+              e_comp_spalart_allmaras || spalart_allmaras_ml) {
             numerics[iMGlevel][TURB_SOL][conv_term] = new CUpwSca_TurbSA(nDim, nVar_Turb, config);
           }
           else if (menter_sst) numerics[iMGlevel][TURB_SOL][conv_term] = new CUpwSca_TurbSST(nDim, nVar_Turb, config);
@@ -2015,7 +2021,7 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
     /*--- Definition of the viscous scheme for each equation and mesh level ---*/
 
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras){
+      if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras || spalart_allmaras_ml){
         numerics[iMGlevel][TURB_SOL][visc_term] = new CAvgGrad_TurbSA(nDim, nVar_Turb, true, config);
       }
       else if (neg_spalart_allmaras) numerics[iMGlevel][TURB_SOL][visc_term] = new CAvgGrad_TurbSA_Neg(nDim, nVar_Turb, true, config);
@@ -2031,13 +2037,14 @@ void CDriver::Numerics_Preprocessing(CConfig *config, CGeometry **geometry, CSol
       else if (e_comp_spalart_allmaras) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSA_E_COMP(nDim, nVar_Turb, config);
       else if (neg_spalart_allmaras) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSA_Neg(nDim, nVar_Turb, config);
       else if (menter_sst) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSST(nDim, nVar_Turb, constants, kine_Inf, omega_Inf, config);
+      else if (spalart_allmaras_ml) numerics[iMGlevel][TURB_SOL][source_first_term] = new CSourcePieceWise_TurbSA_ML(nDim, nVar_Turb, config);
       numerics[iMGlevel][TURB_SOL][source_second_term] = new CSourceNothing(nDim, nVar_Turb, config);
     }
 
     /*--- Definition of the boundary condition method ---*/
 
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras) {
+      if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras || spalart_allmaras_ml) {
         numerics[iMGlevel][TURB_SOL][conv_bound_term] = new CUpwSca_TurbSA(nDim, nVar_Turb, config);
         numerics[iMGlevel][TURB_SOL][visc_bound_term] = new CAvgGrad_TurbSA(nDim, nVar_Turb, false, config);
       }

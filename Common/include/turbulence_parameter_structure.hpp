@@ -35,6 +35,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
+#include <memory>
+
 
 
 /*!
@@ -47,11 +49,10 @@
 class CTurbML {
 
 private:
-    CConfig *config = nullptr;                         /*!< \brief Local pointer to the config parameter object. */
+    CConfig *config = nullptr;               /*!< \brief Local pointer to the config parameter object. */
     unsigned long numberOfMLParameters;      /*!< \brief Number of parameter values in the parameter file. */
     string MLParam_Filename;                 /*!< \brief Name of the SU2 Parameter file being read. */
     ifstream MLParam_file;                   /*!< \brief File object for the SU2 ASCII mesh file. */
-    std::vector<su2double> ML_Parameters;    /*!< \brief Vector containing the parameter values. */
     /*!
      * \brief Reads all SU2 ASCII mesh metadata and checks for errors.
      */
@@ -61,6 +62,8 @@ private:
      */
     void ReadParameterValues();
 public:
+    std::vector<su2double> ML_Parameters;    /*!< \brief Vector containing the parameter values. */
+
     /*!
      * \brief Constructor of the CMLParamReader class.
      */
@@ -100,12 +103,14 @@ public:
      * \return global number of points.
      */
     void MatchParamsPoints(unsigned long global_points);
-/*!
+    /*!
      * \brief Get the ith index from the RCM ordering vector.
      * \return index of original ordering.
      */
-    std::vector<unsigned long> RCM_ordering; /*!< \brief Vector containing result vector of the RCM ordering. */
     unsigned long Get_iRCM_Result(unsigned long ind) {return RCM_ordering[ind]; }
+
+    /*!< \brief Vector containing result vector of the RCM ordering. */
+    std::vector<unsigned long> RCM_ordering;
 
     /*!
      * \brief Set the number of machine learning parameters.

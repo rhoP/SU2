@@ -256,6 +256,9 @@ public:
   vector<su2double> Aspect_Ratio;        /*!< \brief Measure of dual CV aspect ratio (max face area / min face area).  */
   vector<su2double> Volume_Ratio;        /*!< \brief Measure of dual CV volume ratio (max sub-element volume / min sub-element volume). */
 
+    /*--- Data structures for turbulence modeling with machine learning. ---*/
+  CTurbML* MLParam_Container = nullptr;  /*!< \brief Container for machine learning parameters*/
+
   /*!
    * \brief Constructor of the class.
    */

@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <turbulence_parameter_structure.hpp>
 #include "../CNumerics.hpp"
 
 /*!
@@ -409,6 +410,7 @@ private:
     su2double dr, dg, dfw;
     unsigned short iDim;
     bool transition;
+    su2double val_ml_param;
 
 public:
     /*!
@@ -420,10 +422,10 @@ public:
     CSourcePieceWise_TurbSA_ML(unsigned short val_nDim, unsigned short val_nVar, const CConfig* config);
 
     /*!
-     * \brief Residual for source term integration.
+     * \brief Residual for source term integration with field parameter.
      * \param[in] config - Definition of the particular problem.
      * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
      */
-    ResidualType<> ComputeResidual(const CConfig* config) override;
+    ResidualType<> ComputeResidual(const CConfig* config, const su2double& val_ml_param) override;
 
 };

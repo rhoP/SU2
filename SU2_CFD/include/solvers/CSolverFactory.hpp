@@ -27,6 +27,7 @@
 #pragma once
 
 #include "../../../Common/include/option_structure.hpp"
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 
 /*!
  * \brief Enum of different sub solvers the main solver can use. There is not a 1-to-1 correspondence between the actual classes
