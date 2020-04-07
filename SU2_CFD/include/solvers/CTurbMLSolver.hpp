@@ -1,6 +1,6 @@
 /*!
- * \file CTurbSASolver.hpp
- * \brief Headers of the CTurbMLSolver class
+ * \file CTurbMLSolver.hpp
+ * \brief Headers of the CTurbSA_MLSolver class
  * \author  A. Bueno, R. Pochampalli
  * \version 7.0.2 "Blackbird"
  *

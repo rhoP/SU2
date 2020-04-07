@@ -71,6 +71,7 @@
 #include "../../include/numerics/elasticity/CFEALinearElasticity.hpp"
 #include "../../include/numerics/elasticity/CFEANonlinearElasticity.hpp"
 #include "../../include/numerics/elasticity/nonlinear_models.hpp"
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 
 #include "../../include/integration/CIntegrationFactory.hpp"
 

@@ -1,6 +1,6 @@
 /*!
- * \file CTurbSASolver.cpp
- * \brief Main subrotuines of CTurbSASolver class
+ * \file CTurbMLSolver.cpp
+ * \brief Main subrotuines of CTurbSA_MLSolver class
  * \author F. Palacios, A. Bueno, R. Pochampalli
  * \version 7.0.2 "Blackbird"
  *
@@ -427,7 +427,7 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
 
         /*--- Compute the source term ---*/
 
-        auto residual = numerics->ComputeResidual(config, geometry->MLParam_Container->ML_Parameters[iPoint]);
+        auto residual = numerics->ComputeResidual(config, geometry->MLParam_Container->Get_iParamML(iPoint));
 
         /*--- Store the intermittency ---*/
 

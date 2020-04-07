@@ -28,8 +28,9 @@
 
 #pragma once
 
-#include <turbulence_parameter_structure.hpp>
+
 #include "../CNumerics.hpp"
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 
 /*!
  * \class CSourcePieceWise_TurbSA
@@ -426,6 +427,20 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
      */
-    ResidualType<> ComputeResidual(const CConfig* config, const su2double& val_ml_param) override;
+    ResidualType<> ComputeResidual(const CConfig* config, const su2double ml_param) override;
 
+    /*!
+     * \brief Sets the value of the field parameter for turbulence modeling with machine learning
+     */
+    void SetMLParam (su2double value_field_parameter) override {
+        val_ml_param = value_field_parameter;
+    }
+
+    /*!
+     * \brief Gets the value of the field parameter for turbulence modeling with machine learning
+     * \return The value of the field parameter
+     */
+    su2double GetMLParam() override{
+        return val_ml_param;
+    }
 };

@@ -25,6 +25,7 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "../../include/solvers/CSolver.hpp"
 #include "../../include/solvers/CSolverFactory.hpp"
 #include "../../include/solvers/CEulerSolver.hpp"
@@ -50,7 +51,7 @@
 #include "../../include/solvers/CBaselineSolver_FEM.hpp"
 #include "../../include/solvers/CRadP1Solver.hpp"
 #include "../../include/solvers/CTurbMLSolver.hpp"
-
+#include "../../include/solvers/CDiscAdjTurbMLSolver.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -278,6 +279,7 @@ CSolver* CSolverFactory::createSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
       break;
     case SUB_SOLVER_TYPE::TURB: case SUB_SOLVER_TYPE::TURB_SA: case SUB_SOLVER_TYPE::TURB_SST:
+    case SUB_SOLVER_TYPE::TURB_SA_ML:
       genericSolver = createTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, false);
       metaData.integrationType = INTEGRATION_TYPE::SINGLEGRID;
       break;
@@ -335,7 +337,7 @@ CSolver* CSolverFactory::createTurbSolver(ENUM_TURB_MODEL kindTurbModel, CSolver
         SU2_MPI::Error("Unknown turbulence model", CURRENT_FUNCTION);
         break;
     }
-  } else {
+  } else if (kindTurbModel != SA_ML){
 
     if (config->GetDiscrete_Adjoint()){
       if (!config->GetFrozen_Visc_Disc())
@@ -344,6 +346,9 @@ CSolver* CSolverFactory::createTurbSolver(ENUM_TURB_MODEL kindTurbModel, CSolver
       if (!config->GetFrozen_Visc_Cont())
         turbSolver = new CAdjTurbSolver(geometry, config, iMGLevel);
     }
+  }
+  else if (config->GetDiscrete_Adjoint()){
+      turbSolver = new CDiscAdjTurbMLSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel);
   }
 
   return turbSolver;

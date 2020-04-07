@@ -1116,7 +1116,7 @@ CSourcePieceWise_TurbSA_ML::CSourcePieceWise_TurbSA_ML(unsigned short val_nDim,
     transition = (config->GetKind_Trans_Model() == BC);
 }
 
-CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config, const su2double& ml_param) {
+CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config, const su2double ml_param) {
 
 //  AD::StartPreacc();
 //  AD::SetPreaccIn(V_i, nDim+6);
@@ -1129,6 +1129,10 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 //  BC Transition Model variables
     su2double vmag, rey, re_theta, re_theta_t, re_v;
     su2double tu , nu_cr, nu_t, nu_BC, chi_1, chi_2, term1, term2, term_exponential;
+
+    /*--- Assign the machine learning parameter ---*/
+    val_ml_param = ml_param;
+
 
     if (incompressible) {
         Density_i = V_i[nDim+2];
@@ -1210,7 +1214,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
             Production = gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
         }
         else {
-            Production = ml_param*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = val_ml_param*cb1*Shat*TurbVar_i[0]*Volume;
         }
 
         /*--- Destruction term ---*/

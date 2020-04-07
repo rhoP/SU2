@@ -32,8 +32,9 @@
 #include <iostream>
 #include <limits>
 #include <cstdlib>
-#include <turbulence_parameter_structure.hpp>
 
+
+#include "../../../Common/include/turbulence_parameter_structure.hpp"
 #include "../../../Common/include/CConfig.hpp"
 
 using namespace std;
@@ -1321,9 +1322,21 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
      */
-  inline virtual ResidualType<> ComputeResidual(const CConfig* config, const su2double& val_ml_param) {
+  inline virtual ResidualType<> ComputeResidual(const CConfig* config, const su2double ml_param) {
         return ResidualType<>(nullptr,nullptr,nullptr); }
 
+    /*!
+     * \brief Sets the value of the field parameter for turbulence modeling with machine learning
+     */
+  inline virtual void SetMLParam (su2double value_field_parameter){}
+
+    /*!
+     * \brief Gets the value of the field parameter for turbulence modeling with machine learning
+     * \return The value of the field parameter
+     */
+  inline virtual su2double GetMLParam(){
+        return 0.0;
+    }
 };
 
 /*!

@@ -53,6 +53,8 @@ private:
     unsigned long numberOfMLParameters;      /*!< \brief Number of parameter values in the parameter file. */
     string MLParam_Filename;                 /*!< \brief Name of the SU2 Parameter file being read. */
     ifstream MLParam_file;                   /*!< \brief File object for the SU2 ASCII mesh file. */
+    std::vector<su2double> ML_Parameters;    /*!< \brief Vector containing the parameter values. */
+
     /*!
      * \brief Reads all SU2 ASCII mesh metadata and checks for errors.
      */
@@ -62,7 +64,6 @@ private:
      */
     void ReadParameterValues();
 public:
-    std::vector<su2double> ML_Parameters;    /*!< \brief Vector containing the parameter values. */
 
     /*!
      * \brief Constructor of the CMLParamReader class.
