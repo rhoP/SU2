@@ -543,7 +543,7 @@ void CDriver::Postprocessing() {
 
   if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
 
-  if(MLParams != nullptr){
+  if(MLParams != nullptr and rank == MASTER_NODE){
       delete MLParams;
       cout << "Deleted machine learning parameter container" << endl;
   }
@@ -832,9 +832,10 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
 
   /*--- Load the machine learning parameter file for the turbulence modeling problem---*/
   if(config->GetKind_Turb_Model()==8){
-      unsigned long nPoint = geometry[MESH_0]->GetnPoint();
-      MLParams = new CTurbML(config,nPoint);
-      cout << MLParams->Get_nParamML() << " Machine learning parameters found." << endl;
+      MLParams = new CTurbML(config, config->GetiZone(), config->GetnZone());
+      if (rank == MASTER_NODE)
+          cout << MLParams->Get_nParamML() << " Machine learning parameters found." << endl;
+
   }
 
   /*--- Renumbering points using Reverse Cuthill McKee ordering ---*/

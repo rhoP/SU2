@@ -1402,6 +1402,7 @@ void CFlowOutput::WriteForcesBreakdown(CConfig *config, CGeometry *geometry, CSo
           case SA_E_COMP: Breakdown_file << "Compressibility Correction Edwards Spalart Allmaras" << "\n"; break;
           case SST:       Breakdown_file << "Menter's SST"     << "\n"; break;
           case SST_SUST:  Breakdown_file << "Menter's SST with sustaining terms" << "\n"; break;
+          case SA_ML:     Breakdown_file << "Machine learning on Spalart Allmaras" << "\n"; break;
         }
         break;
     }

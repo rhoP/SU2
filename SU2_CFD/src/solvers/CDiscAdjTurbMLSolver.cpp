@@ -27,13 +27,6 @@
 
 #include "../../include/solvers/CDiscAdjTurbMLSolver.hpp"
 
-CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(void) : CSolver () {
-
-}
-
-CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry, CConfig *config)  : CSolver() {
-
-}
 
 CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
                                            CConfig *config, CSolver *direct_solver,
@@ -50,8 +43,6 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
     nVar = direct_solver->GetnVar();
     nDim = geometry->GetnDim();
 
-    /*--- Initialize arrays to NULL ---*/
-
     /*-- Store some information about direct solver ---*/
     this->KindDirect_Solver = Kind_Solver;
     this->direct_solver = direct_solver;
@@ -67,8 +58,10 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
     Residual_RMS  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_RMS[iVar]  = 1.0;
     Residual_Max  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_Max[iVar]  = 1.0;
 
-    /*--- Define the turbulence parameter adjoint ---*/
+    /*--- Instantiate the turbulence parameter adjoint variables---*/
     Sensitivity_Turb_params = new su2double[nPoint];
+
+    Turb_Params.reserve(nPoint);
 
 
     /*--- Define some auxiliary vectors related to the residual for problems with a BGS strategy---*/
@@ -141,6 +134,8 @@ CDiscAdjTurbMLSolver::~CDiscAdjTurbMLSolver(void) {
 
 
     if (nodes != nullptr) delete nodes;
+
+    if (Sensitivity_Turb_params != nullptr) delete[] Sensitivity_Turb_params;
 }
 
 void CDiscAdjTurbMLSolver::SetRecording(CGeometry* geometry, CConfig *config){
@@ -317,6 +312,19 @@ void CDiscAdjTurbMLSolver::RegisterVariables(CGeometry *geometry, CConfig *confi
     /*--- Here it is possible to register other variables as input that influence the flow solution
      * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
      * extracted in the ExtractAdjointVariables routine. ---*/
+
+    nPoint   =  geometry->GetnPoint();
+
+    if (KindDirect_Solver == RUNTIME_TURB_SYS){
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+            Turb_Params[iPoint] = geometry->MLParam_Container->Get_iParamML(iPoint);
+            AD::RegisterInput(Turb_Params[iPoint]);
+            geometry->MLParam_Container->Set_iParamML(Turb_Params[iPoint], iPoint);
+        }
+    }
+
+
+
 }
 
 void CDiscAdjTurbMLSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
@@ -365,6 +373,9 @@ void CDiscAdjTurbMLSolver::RegisterObj_Func(CConfig *config) {
                 break;
             case TOTAL_HEATFLUX:
                 ObjFunc_Value = direct_solver->GetTotal_HeatFlux();
+                break;
+            case INVERSE_DESIGN_ML:
+                ObjFunc_Value = Get_Objective_Value(config);
                 break;
         }
 
@@ -548,6 +559,13 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig
 
     /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
 
+    nPoint = geometry->GetnPoint();
+
+    if (KindDirect_Solver == RUNTIME_TURB_SYS){
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+            Sensitivity_Turb_params[iPoint] = SU2_TYPE::GetDerivative(geometry->MLParam_Container->Get_iParamML(iPoint));
+        }
+    }
 }
 
 void CDiscAdjTurbMLSolver::ExtractAdjoint_CrossTerm(CGeometry *geometry, CConfig *config) {
@@ -817,4 +835,10 @@ void CDiscAdjTurbMLSolver::ComputeResidual_Multizone(CGeometry *geometry, CConfi
 
     SetResidual_BGS(geometry, config);
 
+}
+
+
+su2double CDiscAdjTurbMLSolver::Get_Objective_Value(CConfig *config) {
+
+return 0.5 * pow((direct_solver->GetTotal_CL() - 1.074902), 2);
 }

@@ -54,6 +54,7 @@ private:
     su2double Mach, Alpha, Beta, Pressure, Temperature, BPressure, ModVel;
     su2double TemperatureRad, Total_Sens_Temp_Rad;
 
+    vector<su2double> Turb_Params;
     su2double *Sensitivity_Turb_params = nullptr; /*!< \brief Auxiliary vector for the geometry solution (dimension nDim instead of nVar). */
 
     CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
@@ -64,18 +65,6 @@ private:
     inline CVariable* GetBaseClassPointerToNodes() override { return nodes; }
 
 public:
-
-    /*!
-     * \brief Constructor of the class.
-     */
-    CDiscAdjTurbMLSolver(void);
-
-    /*!
-     * \overload
-     * \param[in] geometry - Geometrical definition of the problem.
-     * \param[in] config - Definition of the particular problem.
-     */
-    CDiscAdjTurbMLSolver(CGeometry *geometry, CConfig *config);
 
     /*!
      * \overload
@@ -273,5 +262,8 @@ public:
      * \param[in] config - Definition of the particular problem.
      */
     void ComputeResidual_Multizone(CGeometry *geometry, CConfig *config) override;
+
+
+    su2double Get_Objective_Value(CConfig *config);
 
 };

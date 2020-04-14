@@ -28,6 +28,7 @@
  */
 
 #include "../include/turbulence_parameter_structure.hpp"
+#include "../include/toolboxes/CLinearPartitioner.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -37,16 +38,33 @@
      * \param[in] nParam - Number of Parameters of the Turbulence model.
      * \param[in] config - Definition of the particular problem.
 */
-CTurbML::CTurbML(CConfig  *val_config, unsigned long global_points) {
-        this->config = val_config;
-        /* Store the mesh filename since we will open/close multiple times. */
-                MLParam_Filename = config->GetMLParam_FileName();
-        /* Read the basic metadata and perform some basic error checks. */
-                ReadMetadata();
-        MatchParamsPoints(global_points);
-        /* Read and store the parameter values */
-                ReadParameterValues();
-    }
+CTurbML::CTurbML(CConfig  *val_config, unsigned short val_iZone,
+                 unsigned short val_nZone)
+        :CMeshReaderFVM(val_config, val_iZone, val_nZone){
+
+    this->config = val_config;
+
+
+    /* Store the current zone to be read and the total number of zones. */
+    myZone = val_iZone;
+    nZones = val_nZone;
+
+
+    /* Store the mesh filename since we will open/close multiple times. */
+
+    MLParam_Filename = config->GetMLParam_FileName();
+
+    /* Read the basic metadata and perform some basic error checks. */
+
+    ReadMetadata();
+
+
+
+    /* Read and store the parameter values */
+
+    ReadParameterValues();
+
+}
 
 
 
@@ -62,21 +80,22 @@ void CTurbML::ReadMetadata() {
         string::size_type position;
         /*--- Read the metadata: total number of machine learning parameters. ---*/
 
-                        bool foundNPARA = false;
+        bool foundNPARA = false;
 
-                while (getline (MLParam_file, text_line)) {
+        while (getline (MLParam_file, text_line)) {
 
-                        /*--- Read the number of parameters of the problem ---*/
+            /*--- Read the number of parameters of the problem ---*/
 
-                                        position = text_line.find ("NPARA=",0);
-                if (position != string::npos) {
-                        text_line.erase (0,6);
-                        numberOfMLParameters = atoi(text_line.c_str());
-                        for (unsigned long iPara = 0; iPara < numberOfMLParameters; iPara++)
-                                getline (MLParam_file, text_line);
-                        foundNPARA = true;
-                    }
+            position = text_line.find ("NPARA=",0);
+            if (position != string::npos) {
+                text_line.erase (0,6);
+                numberOfMLParameters = atoi(text_line.c_str());
+                numberOfGlobalPoints =  numberOfMLParameters;
+                for (unsigned long iPara = 0; iPara < numberOfMLParameters; iPara++)
+                    getline (MLParam_file, text_line);
+                    foundNPARA = true;
             }
+        }
 
                 /* Throw an error if the parameter keyword was not found. */
                         if (!foundNPARA) {
@@ -88,33 +107,61 @@ void CTurbML::ReadMetadata() {
     }
 
 void CTurbML::ReadParameterValues() {
-        MLParam_file.open(MLParam_Filename.c_str(), ios::in);
-        /*--- Reserve memory for the vector of parameters ---*/
 
-                        ML_Parameters.reserve(numberOfMLParameters);
-        cout << "Reading the machine learning parameters. " << endl;
-        /*--- Read the parameters into our data structure. ---*/
+    /* Get a partitioner to help with linear partitioning. */
+    CLinearPartitioner pointPartitioner(numberOfGlobalPoints,0);
 
-                        string text_line;
-        string::size_type position;
-        getline (MLParam_file, text_line);
-        position = text_line.find("NPARA=",0);
-        unsigned long ipar = 0;
-        while (MLParam_file.is_open() && (ipar < numberOfMLParameters)) {
-                double par_val{0.0};
-                MLParam_file >> par_val;
-                ML_Parameters.push_back(par_val);
-                ipar++;
+    /* Determine number of local points */
+    for (unsigned long globalIndex=0; globalIndex < numberOfGlobalPoints; globalIndex++) {
+        if ((int)pointPartitioner.GetRankContainingIndex(globalIndex) == rank) {
+            numberOfLocalPoints++;
         }
+    }
 
-        MLParam_file.close();
+
+    /*--- Reserve memory for the vector of parameters ---*/
+    ML_Parameters.reserve(numberOfLocalPoints);
+    MLParam_file.open(MLParam_Filename.c_str(), ios::in);
+
+    /*--- Read the parameters into our data structure. ---*/
+    string text_line;
+    string::size_type position;
+
+
+    while (getline (MLParam_file, text_line)) {
+
+        position = text_line.find("NPARA=",0);
+        if (position != string::npos) {
+
+            unsigned long GlobalIndex = 0;
+            while (GlobalIndex < numberOfGlobalPoints) {
+
+                getline(MLParam_file, text_line);
+
+                /*--- We only read information for this node if it is owned by this
+                 rank based upon our initial linear partitioning. ---*/
+
+                if ((int)pointPartitioner.GetRankContainingIndex(GlobalIndex) == rank) {
+                    double par_val{0.0};
+                    istringstream par_line(text_line);
+                    par_line >> par_val;
+                    ML_Parameters.push_back(par_val);
+
+                    }
+                GlobalIndex++;
+            }
+        }
+    }
+
+    MLParam_file.close();
 }
 
 
 void CTurbML::MatchParamsPoints(unsigned long global_points) {
         if(numberOfMLParameters != global_points){
-                SU2_MPI::Error(string("Mismatch between the number of parameters and number of points in the problem ") +
-                                                       string(" \n Check the parameter file."),
+                SU2_MPI::Error(string("Mismatch between the number of parameters ") + to_string(numberOfMLParameters) +
+                        string("\n and number of points in the problem ") + to_string(global_points) +
+                                                       string("\nCheck the parameter file."),
                                                        CURRENT_FUNCTION);
         }
 }

@@ -4193,7 +4193,7 @@ void CSolver::LoadInletProfile(CGeometry **geometry,
   unsigned short nVar_Turb = 0;
   if (turbulent)
     switch (config->GetKind_Turb_Model()) {
-      case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP:
+    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP: case SA_ML:
         nVar_Turb = 1;
         break;
       case SST: case SST_SUST:

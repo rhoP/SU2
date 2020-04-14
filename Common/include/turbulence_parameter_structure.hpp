@@ -30,6 +30,7 @@
 #pragma once
 
 #include "./mpi_structure.hpp"
+#include "./geometry/meshreader/CMeshReaderFVM.hpp"
 #include "./CConfig.hpp"
 #include <cmath>
 #include <iostream>
@@ -46,7 +47,7 @@
  * \author Rohit P.
  */
 
-class CTurbML {
+class CTurbML: public CMeshReaderFVM {
 
 private:
     CConfig *config = nullptr;               /*!< \brief Local pointer to the config parameter object. */
@@ -60,15 +61,20 @@ private:
      */
     void ReadMetadata();
     /*!
-     * \brief Reads the grid points from an SU2 zone into linear partitions across all ranks.
+     * \brief Reads the parameters from an SU2 zone into linear partitions across all ranks.
      */
     void ReadParameterValues();
+
+    unsigned short myZone; /*!< \brief Current SU2 zone index. */
+    unsigned short nZones; /*!< \brief Total number of zones in the SU2 file. */
+
 public:
 
     /*!
      * \brief Constructor of the CMLParamReader class.
      */
-    CTurbML(CConfig *val_config, unsigned long global_points);
+    CTurbML(CConfig *val_config, unsigned short val_iZone,
+            unsigned short val_nZone);
     /*!
      * \brief Destructor of the CMLParamReader class.
      */
