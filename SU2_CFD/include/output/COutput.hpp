@@ -166,7 +166,8 @@ protected:
 
    string volumeFilename,               //!< Volume output filename
    surfaceFilename,                     //!< Surface output filename
-   restartFilename;                     //!< Restart output filename
+   restartFilename,                     //!< Restart output filename
+   FieldSensitivityFileName;            //!< Field Sensitivity Output filename
 
   /** \brief Structure to store information for a volume output field.
    *

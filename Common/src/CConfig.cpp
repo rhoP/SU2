@@ -1919,8 +1919,9 @@ void CConfig::SetConfig_Options() {
   addStringOption("MESH_FILENAME", Mesh_FileName, string("mesh.su2"));
   /*!\brief MESH_OUT_FILENAME \n DESCRIPTION: Mesh output file name. Used when converting, scaling, or deforming a mesh. \n DEFAULT: mesh_out.su2 \ingroup Config*/
   addStringOption("MESH_OUT_FILENAME", Mesh_Out_FileName, string("mesh_out.su2"));
-  /* DESCRIPTION:  Machine learning parameter input file */
+  /* DESCRIPTION:  Machine learning parameter input  and adjoint output files */
   addStringOption("MLPARAM_FILENAME", MLParam_FileName, string("ml_param.su2"));
+  addStringOption("FIELD_SENSITIVITY_FILENAME", Field_Sensitivity_FileName, string("field_sensitivity.csv"));
 
   /* DESCRIPTION: List of the number of grid points in the RECTANGLE or BOX grid in the x,y,z directions. (default: (33,33,33) ). */
   addShortListOption("MESH_BOX_SIZE", nMesh_Box_Size, Mesh_Box_Size);
