@@ -53,6 +53,7 @@ private:
     su2double Reg_Param_Value;     /*!< \brief Value of the objective function. */
     su2double Mach, Alpha, Beta, Pressure, Temperature, BPressure, ModVel;
     su2double TemperatureRad, Total_Sens_Temp_Rad;
+    map<unsigned long, passivedouble> Max_Sensitivities; //!< \brief map containing the maximum residuals and their global indices
 
     vector<su2double> Turb_Params;
     su2double *Sensitivity_Turb_params = nullptr; /*!< \brief Auxiliary vector for the geometry solution (dimension nDim instead of nVar). */
@@ -114,13 +115,6 @@ public:
      */
     void ExtractAdjoint_Solution(CGeometry *geometry, CConfig *config) override;
 
-    /*!
-     * \brief Sets the adjoint values of the flow variables due to cross term contributions
-     * \param[in] geometry - The geometrical definition of the problem.
-     * \param[in] solver_container - The solver container holding all solutions.
-     * \param[in] config - The particular config.
-     */
-    void ExtractAdjoint_CrossTerm(CGeometry *geometry,  CConfig *config) override;
 
 
     /*!
@@ -257,13 +251,15 @@ public:
                      bool val_update_geo) override;
 
     /*!
-     * \brief Compute the multizone residual.
-     * \param[in] geometry - Geometrical definition of the problem.
-     * \param[in] config - Definition of the particular problem.
-     */
-    void ComputeResidual_Multizone(CGeometry *geometry, CConfig *config) override;
+ * \brief Value of the objective function
+ * \param[in] config - Definition of the particular problem.
+ */
+   virtual su2double Get_Objective_Value(CConfig *config);
 
-
-    su2double Get_Objective_Value(CConfig *config);
-
+    /*!
+       * \brief Get parameter sensitivity.
+       * \param[in] point_index: index of the point.
+       * \param[out] returns the sensitivity of the indexed ML parameter.
+       */
+    virtual su2double GetMLParamSens(unsigned long point_index) override {return Sensitivity_Turb_params[point_index];}
 };

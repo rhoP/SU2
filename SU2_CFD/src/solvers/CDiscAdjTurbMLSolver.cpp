@@ -59,9 +59,9 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
     Residual_Max  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_Max[iVar]  = 1.0;
 
     /*--- Instantiate the turbulence parameter adjoint variables---*/
-    Sensitivity_Turb_params = new su2double[nPoint];
+    Sensitivity_Turb_params = new su2double[nPointDomain];
 
-    Turb_Params.reserve(nPoint);
+    Turb_Params.reserve(nPointDomain);
 
 
     /*--- Define some auxiliary vectors related to the residual for problems with a BGS strategy---*/
@@ -500,7 +500,8 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig 
 
 }
 
-void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry,
+                                                    CConfig *config) {
 
     /*--- Extract the adjoint values of the farfield values ---*/
 
@@ -568,24 +569,8 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig
     }
 }
 
-void CDiscAdjTurbMLSolver::ExtractAdjoint_CrossTerm(CGeometry *geometry, CConfig *config) {
-
-    unsigned short iVar;
-    unsigned long iPoint;
-
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
-
-        /*--- Extract the adjoint solution ---*/
-
-        direct_solver->GetNodes()->GetAdjointSolution_LocalIndex(iPoint,Solution);
-
-        for (iVar = 0; iVar < nVar; iVar++) nodes->SetCross_Term_Derivative(iPoint,iVar, Solution[iVar]);
-
-    }
-
-}
-
-void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry,
+                                             CConfig *config) {
 
     bool dual_time = (config->GetTime_Marching() == DT_STEPPING_1ST ||
                       config->GetTime_Marching() == DT_STEPPING_2ND);
@@ -597,11 +582,6 @@ void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *confi
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
         for (iVar = 0; iVar < nVar; iVar++) {
             Solution[iVar] = nodes->GetSolution(iPoint,iVar);
-        }
-        if (fsi) {
-            for (iVar = 0; iVar < nVar; iVar++) {
-                Solution[iVar] += nodes->GetCross_Term_Derivative(iPoint,iVar);
-            }
         }
         if (dual_time) {
             for (iVar = 0; iVar < nVar; iVar++) {
@@ -617,7 +597,9 @@ void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *confi
     }
 }
 
-void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) {
+void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry,
+                                          CSolver **solver,
+                                          CConfig *config) {
 
     unsigned long iPoint;
     unsigned short iDim;
@@ -658,7 +640,13 @@ void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry, CSolver **solver,
     SetSurface_Sensitivity(geometry, config);
 }
 
-void CDiscAdjTurbMLSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config_container, unsigned short iMesh, unsigned short iRKStep, unsigned short RunTime_EqSystem, bool Output) {
+void CDiscAdjTurbMLSolver::Preprocessing(CGeometry *geometry,
+                                         CSolver **solver_container,
+                                         CConfig *config_container,
+                                         unsigned short iMesh,
+                                         unsigned short iRKStep,
+                                         unsigned short RunTime_EqSystem,
+                                         bool Output) {
     bool dual_time_1st = (config_container->GetTime_Marching() == DT_STEPPING_1ST);
     bool dual_time_2nd = (config_container->GetTime_Marching() == DT_STEPPING_2ND);
     bool dual_time = (dual_time_1st || dual_time_2nd);
@@ -677,7 +665,11 @@ void CDiscAdjTurbMLSolver::Preprocessing(CGeometry *geometry, CSolver **solver_c
     }
 }
 
-void CDiscAdjTurbMLSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig *config, int val_iter, bool val_update_geo) {
+void CDiscAdjTurbMLSolver::LoadRestart(CGeometry **geometry,
+                                       CSolver ***solver,
+                                       CConfig *config,
+                                       int val_iter,
+                                       bool val_update_geo) {
 
     unsigned short iVar, iMesh;
     unsigned long iPoint, index, iChildren, Point_Fine, counter;
@@ -796,47 +788,6 @@ void CDiscAdjTurbMLSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, 
     Restart_Vars = NULL; Restart_Data = NULL;
 
 }
-
-void CDiscAdjTurbMLSolver::ComputeResidual_Multizone(CGeometry *geometry, CConfig *config) {
-
-    unsigned short iVar;
-    unsigned long iPoint;
-    su2double residual, bgs_sol;
-
-    /*--- Set Residuals to zero ---*/
-
-    for (iVar = 0; iVar < nVar; iVar++){
-        SetRes_BGS(iVar,0.0);
-        SetRes_Max_BGS(iVar,0.0,0);
-    }
-
-    /*--- Compute the BGS solution (adding the cross term) ---*/
-    for (iPoint = 0; iPoint < nPointDomain; iPoint++){
-        for (iVar = 0; iVar < nVar; iVar++){
-            if(config->GetMultizone_Problem() && !config->GetFSI_Simulation()) {
-                bgs_sol = nodes->GetSolution(iPoint,iVar);
-            }
-            else {
-                bgs_sol = nodes->GetSolution(iPoint,iVar) + nodes->GetCross_Term_Derivative(iPoint,iVar);
-            }
-            nodes->Set_BGSSolution(iPoint, iVar, bgs_sol);
-        }
-    }
-
-    /*--- Set the residuals ---*/
-
-    for (iPoint = 0; iPoint < nPointDomain; iPoint++){
-        for (iVar = 0; iVar < nVar; iVar++){
-            residual = nodes->Get_BGSSolution(iPoint,iVar) - nodes->Get_BGSSolution_k(iPoint,iVar);
-            AddRes_BGS(iVar,residual*residual);
-            AddRes_Max_BGS(iVar,fabs(residual),geometry->node[iPoint]->GetGlobalIndex(),geometry->node[iPoint]->GetCoord());
-        }
-    }
-
-    SetResidual_BGS(geometry, config);
-
-}
-
 
 su2double CDiscAdjTurbMLSolver::Get_Objective_Value(CConfig *config) {
 

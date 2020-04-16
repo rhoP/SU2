@@ -764,7 +764,8 @@ private:
   New_SU2_FileName,              /*!< \brief Output SU2 mesh file converted from CGNS format. */
   SurfSens_FileName,             /*!< \brief Output file for the sensitivity on the surface (discrete adjoint). */
   VolSens_FileName,              /*!< \brief Output file for the sensitivity in the volume (discrete adjoint). */
-  MLParam_FileName;             /*!< \brief Input file containing the machine learning parameter values. */
+  MLParam_FileName,              /*!< \brief Input file containing the machine learning parameter values. */
+  Field_Sensitivity_FileName;    /*!< \brief Output file containing the field sensitivities for machine learning of turbulence modeling. */
 
   bool Wrt_Output,           /*!< \brief Write any output files */
   Wrt_Vol_Sol,               /*!< \brief Write a volume solution file */
@@ -5479,10 +5480,16 @@ public:
   string GetUnsteady_FileName(string val_filename, int val_iter, string ext);
 
   /*!
-   * \brief Get name of the input grid.
-   * \return File name of the input grid.
+   * \brief Get name of the file with machine learning parameters.
+   * \return File name of the input parameters.
    */
   string GetMLParam_FileName(void) {return MLParam_FileName;}
+
+    /*!
+   * \brief Get name of the field sensitivity output file.
+   * \return Name of the output file.
+   */
+    string Get_FieldSensitivity_FileName(void) {return Field_Sensitivity_FileName;}
 
   /*!
    * \brief Append the input filename string with the appropriate objective function extension.

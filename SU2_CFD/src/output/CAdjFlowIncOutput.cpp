@@ -92,6 +92,9 @@ CAdjFlowIncOutput::CAdjFlowIncOutput(CConfig *config, unsigned short nDim) : COu
 
   if (convFields.empty() ) convFields.emplace_back("RMS_ADJ_PRESSURE");
 
+  /*--- Set the field sensitivity file name if modeling turbulence ---*/
+  if (turb_model == 8) FieldSensitivityFileName = config->Get_FieldSensitivity_FileName();
+
 }
 
 CAdjFlowIncOutput::~CAdjFlowIncOutput(void) {}
@@ -111,7 +114,7 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
   AddHistoryOutput("RMS_ADJ_TEMPERATURE", "rms[A_T]", ScreenOutputFormat::FIXED, "RMS_RES", " Root-mean square residual of the adjoint temperature.", HistoryFieldType::RESIDUAL);
   if (!config->GetFrozen_Visc_Disc() || !config->GetFrozen_Visc_Cont()){
     switch(turb_model){
-    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP:
+    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP: case SA_ML:
       /// DESCRIPTION: Root-mean square residual of the adjoint nu tilde.
       AddHistoryOutput("RMS_ADJ_NU_TILDE", "rms[A_nu]", ScreenOutputFormat::FIXED, "RMS_RES", "Root-mean square residual of the adjoint nu tilde.", HistoryFieldType::RESIDUAL);
       break;
@@ -153,6 +156,10 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
       /// DESCRIPTION: Maximum residual of the adjoint dissipation.
       AddHistoryOutput("MAX_ADJ_DISSIPATION",    "max[A_w]", ScreenOutputFormat::FIXED, "MAX_RES", "Maximum residual of the adjoint dissipation.", HistoryFieldType::RESIDUAL);
       break;
+    case SA_ML:
+        /// DESCRIPTION: Root-mean square residual of the adjoint nu tilde.
+        AddHistoryOutput("MAX_ADJ_FIELD", "max[Beta]", ScreenOutputFormat::FIXED, "RMS_RES", "maximum residual of the adjoint field sensitivity.", HistoryFieldType::RESIDUAL);
+        break;
     default: break;
     }
   }
@@ -227,7 +234,7 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
   }
   if (!config->GetFrozen_Visc_Disc() || !config->GetFrozen_Visc_Cont()){
     switch(turb_model){
-    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP:
+    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP: case SA_ML:
       SetHistoryOutputValue("RMS_ADJ_NU_TILDE", log10(adjturb_solver->GetRes_RMS(0)));
       break;
     case SST:
