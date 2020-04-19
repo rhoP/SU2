@@ -199,120 +199,6 @@ void CDiscAdjTurbMLSolver::RegisterSolution(CGeometry *geometry, CConfig *config
 
 void CDiscAdjTurbMLSolver::RegisterVariables(CGeometry *geometry, CConfig *config, bool reset) {
 
-    /*--- Register farfield values as input ---*/
-
-    if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS && !config->GetBoolTurbomachinery())) {
-
-        su2double Velocity_Ref = config->GetVelocity_Ref();
-        Alpha                  = config->GetAoA()*PI_NUMBER/180.0;
-        Beta                   = config->GetAoS()*PI_NUMBER/180.0;
-        Mach                   = config->GetMach();
-        Pressure               = config->GetPressure_FreeStreamND();
-        Temperature            = config->GetTemperature_FreeStreamND();
-
-        su2double SoundSpeed = 0.0;
-
-        if (nDim == 2) { SoundSpeed = config->GetVelocity_FreeStreamND()[0]*Velocity_Ref/(cos(Alpha)*Mach); }
-        if (nDim == 3) { SoundSpeed = config->GetVelocity_FreeStreamND()[0]*Velocity_Ref/(cos(Alpha)*cos(Beta)*Mach); }
-
-        if (!reset) {
-            AD::RegisterInput(Mach);
-            AD::RegisterInput(Alpha);
-            AD::RegisterInput(Temperature);
-            AD::RegisterInput(Pressure);
-        }
-
-        /*--- Recompute the free stream velocity ---*/
-
-        if (nDim == 2) {
-            config->GetVelocity_FreeStreamND()[0] = cos(Alpha)*Mach*SoundSpeed/Velocity_Ref;
-            config->GetVelocity_FreeStreamND()[1] = sin(Alpha)*Mach*SoundSpeed/Velocity_Ref;
-        }
-        if (nDim == 3) {
-            config->GetVelocity_FreeStreamND()[0] = cos(Alpha)*cos(Beta)*Mach*SoundSpeed/Velocity_Ref;
-            config->GetVelocity_FreeStreamND()[1] = sin(Beta)*Mach*SoundSpeed/Velocity_Ref;
-            config->GetVelocity_FreeStreamND()[2] = sin(Alpha)*cos(Beta)*Mach*SoundSpeed/Velocity_Ref;
-        }
-
-        config->SetTemperature_FreeStreamND(Temperature);
-        direct_solver->SetTemperature_Inf(Temperature);
-        config->SetPressure_FreeStreamND(Pressure);
-        direct_solver->SetPressure_Inf(Pressure);
-
-    }
-
-    if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
-
-        BPressure = config->GetPressureOut_BC();
-        Temperature = config->GetTotalTemperatureIn_BC();
-
-        if (!reset){
-            AD::RegisterInput(BPressure);
-            AD::RegisterInput(Temperature);
-        }
-
-        config->SetPressureOut_BC(BPressure);
-        config->SetTotalTemperatureIn_BC(Temperature);
-    }
-
-    /*--- Register incompressible initialization values as input ---*/
-
-    if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-        ((KindDirect_Solver == RUNTIME_FLOW_SYS &&
-          (!config->GetBoolTurbomachinery())))) {
-
-        /*--- Access the velocity (or pressure) and temperature at the
-         inlet BC and the back pressure at the outlet. Note that we are
-         assuming that have internal flow, which will be true for the
-         majority of cases. External flows with far-field BCs will report
-         zero for these sensitivities. ---*/
-
-        ModVel    = config->GetIncInlet_BC();
-        BPressure = config->GetIncPressureOut_BC();
-        Temperature = config->GetIncTemperature_BC();
-
-        /*--- Register the variables for AD. ---*/
-
-        if (!reset) {
-            AD::RegisterInput(ModVel);
-            AD::RegisterInput(BPressure);
-            AD::RegisterInput(Temperature);
-        }
-
-        /*--- Set the BC values in the config class. ---*/
-
-        config->SetIncInlet_BC(ModVel);
-        config->SetIncPressureOut_BC(BPressure);
-        config->SetIncTemperature_BC(Temperature);
-
-    }
-
-    /*--- Register incompressible radiation values as input ---*/
-
-    if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-        ((KindDirect_Solver == RUNTIME_RADIATION_SYS &&
-          (!config->GetBoolTurbomachinery())))) {
-
-        /*--- Access the nondimensional freestream temperature. ---*/
-
-        TemperatureRad = config->GetTemperature_FreeStreamND();
-
-        /*--- Register the variables for AD. ---*/
-
-        if (!reset) {
-            AD::RegisterInput(TemperatureRad);
-        }
-
-        /*--- Set the temperature at infinity in the direct solver class. ---*/
-
-        direct_solver->SetTemperature_Inf(TemperatureRad);
-
-    }
-
-    /*--- Here it is possible to register other variables as input that influence the flow solution
-     * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
-     * extracted in the ExtractAdjointVariables routine. ---*/
-
     nPoint   =  geometry->GetnPoint();
 
     if (KindDirect_Solver == RUNTIME_TURB_SYS){
@@ -322,7 +208,6 @@ void CDiscAdjTurbMLSolver::RegisterVariables(CGeometry *geometry, CConfig *confi
             geometry->MLParam_Container->Set_iParamML(Turb_Params[iPoint], iPoint);
         }
     }
-
 
 
 }
@@ -502,64 +387,6 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig 
 
 void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry,
                                                     CConfig *config) {
-
-    /*--- Extract the adjoint values of the farfield values ---*/
-
-    if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && !config->GetBoolTurbomachinery()) {
-        su2double Local_Sens_Press, Local_Sens_Temp, Local_Sens_AoA, Local_Sens_Mach;
-
-        Local_Sens_Mach  = SU2_TYPE::GetDerivative(Mach);
-        Local_Sens_AoA   = SU2_TYPE::GetDerivative(Alpha);
-        Local_Sens_Temp  = SU2_TYPE::GetDerivative(Temperature);
-        Local_Sens_Press = SU2_TYPE::GetDerivative(Pressure);
-
-        SU2_MPI::Allreduce(&Local_Sens_Mach,  &Total_Sens_Mach,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_AoA,   &Total_Sens_AoA,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_Temp,  &Total_Sens_Temp,  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_Press, &Total_Sens_Press, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    }
-
-    if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
-        su2double Local_Sens_BPress, Local_Sens_Temperature;
-
-        Local_Sens_BPress = SU2_TYPE::GetDerivative(BPressure);
-        Local_Sens_Temperature = SU2_TYPE::GetDerivative(Temperature);
-
-        SU2_MPI::Allreduce(&Local_Sens_BPress,   &Total_Sens_BPress,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_Temperature,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    }
-
-    if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-        (KindDirect_Solver == RUNTIME_FLOW_SYS &&
-         (!config->GetBoolTurbomachinery()))) {
-
-        su2double Local_Sens_ModVel, Local_Sens_BPress, Local_Sens_Temp;
-
-        Local_Sens_ModVel = SU2_TYPE::GetDerivative(ModVel);
-        Local_Sens_BPress = SU2_TYPE::GetDerivative(BPressure);
-        Local_Sens_Temp   = SU2_TYPE::GetDerivative(Temperature);
-
-        SU2_MPI::Allreduce(&Local_Sens_ModVel, &Total_Sens_ModVel, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_BPress, &Total_Sens_BPress, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        SU2_MPI::Allreduce(&Local_Sens_Temp,   &Total_Sens_Temp,   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    }
-
-    if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-        (KindDirect_Solver == RUNTIME_RADIATION_SYS &&
-         (!config->GetBoolTurbomachinery()))) {
-
-        su2double Local_Sens_Temp_Rad;
-        Local_Sens_Temp_Rad   = SU2_TYPE::GetDerivative(TemperatureRad);
-
-        SU2_MPI::Allreduce(&Local_Sens_Temp_Rad, &Total_Sens_Temp_Rad, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-        /*--- Store it in the Total_Sens_Temp container so it's accessible without the need of a new method ---*/
-        Total_Sens_Temp = Total_Sens_Temp_Rad;
-
-    }
-
-    /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
-
     nPoint = geometry->GetnPoint();
 
     if (KindDirect_Solver == RUNTIME_TURB_SYS){
@@ -595,49 +422,6 @@ void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry,
             direct_solver->GetNodes()->SetAdjointSolution(iPoint,Solution);
         }
     }
-}
-
-void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry,
-                                          CSolver **solver,
-                                          CConfig *config) {
-
-    unsigned long iPoint;
-    unsigned short iDim;
-    su2double *Coord, Sensitivity, eps;
-
-    bool time_stepping = (config->GetTime_Marching() != STEADY);
-
-    for (iPoint = 0; iPoint < nPoint; iPoint++) {
-        Coord = geometry->node[iPoint]->GetCoord();
-
-        for (iDim = 0; iDim < nDim; iDim++) {
-
-            if(config->GetMultizone_Problem()) {
-                Sensitivity = geometry->node[iPoint]->GetAdjointSolution(iDim);
-            }
-            else {
-                Sensitivity = SU2_TYPE::GetDerivative(Coord[iDim]);
-            }
-
-            /*--- Set the index manually to zero. ---*/
-
-            AD::ResetInput(Coord[iDim]);
-
-            /*--- If sharp edge, set the sensitivity to 0 on that region ---*/
-
-            if (config->GetSens_Remove_Sharp()) {
-                eps = config->GetVenkat_LimiterCoeff()*config->GetRefElemLength();
-                if ( geometry->node[iPoint]->GetSharpEdge_Distance() < config->GetAdjSharp_LimiterCoeff()*eps )
-                    Sensitivity = 0.0;
-            }
-            if (!time_stepping) {
-                nodes->SetSensitivity(iPoint,iDim, Sensitivity);
-            } else {
-                nodes->SetSensitivity(iPoint, iDim, nodes->GetSensitivity(iPoint,iDim) + Sensitivity);
-            }
-        }
-    }
-    SetSurface_Sensitivity(geometry, config);
 }
 
 void CDiscAdjTurbMLSolver::Preprocessing(CGeometry *geometry,

@@ -1919,6 +1919,7 @@ void CConfig::SetConfig_Options() {
   addStringOption("MESH_FILENAME", Mesh_FileName, string("mesh.su2"));
   /*!\brief MESH_OUT_FILENAME \n DESCRIPTION: Mesh output file name. Used when converting, scaling, or deforming a mesh. \n DEFAULT: mesh_out.su2 \ingroup Config*/
   addStringOption("MESH_OUT_FILENAME", Mesh_Out_FileName, string("mesh_out.su2"));
+
   /* DESCRIPTION:  Machine learning parameter input  and adjoint output files */
   addStringOption("MLPARAM_FILENAME", MLParam_FileName, string("ml_param.su2"));
   addStringOption("FIELD_SENSITIVITY_FILENAME", Field_Sensitivity_FileName, string("field_sensitivity.csv"));

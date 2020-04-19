@@ -40,20 +40,9 @@ class CDiscAdjTurbMLSolver final : public CSolver {
 private:
     unsigned short KindDirect_Solver;
     CSolver *direct_solver;
-    su2double Total_Sens_Mach;     /*!< \brief Total mach sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_AoA;      /*!< \brief Total angle of attack sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_Geo;      /*!< \brief Total shape sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_Press;    /*!< \brief Total farfield sensitivity to pressure. */
-    su2double Total_Sens_Temp;     /*!< \brief Total farfield sensitivity to temperature. */
-    su2double Total_Sens_BPress;   /*!< \brief Total sensitivity to outlet pressure. */
-    su2double Total_Sens_Density;  /*!< \brief Total sensitivity to initial density (incompressible). */
-    su2double Total_Sens_ModVel;   /*!< \brief Total sensitivity to inlet velocity (incompressible). */
     su2double ObjFunc_Value;       /*!< \brief Value of the objective function. */
     su2double Reg_Value;           /*!< \brief Value of the regularization function. */
     su2double Reg_Param_Value;     /*!< \brief Value of the objective function. */
-    su2double Mach, Alpha, Beta, Pressure, Temperature, BPressure, ModVel;
-    su2double TemperatureRad, Total_Sens_Temp_Rad;
-    map<unsigned long, passivedouble> Max_Sensitivities; //!< \brief map containing the maximum residuals and their global indices
 
     vector<su2double> Turb_Params;
     su2double *Sensitivity_Turb_params = nullptr; /*!< \brief Auxiliary vector for the geometry solution (dimension nDim instead of nVar). */
@@ -123,78 +112,12 @@ public:
      */
     void RegisterObj_Func(CConfig *config) override;
 
-
-    /*!
-     * \brief Extract and set the geometrical sensitivity.
-     * \param[in] geometry - Geometrical definition of the problem.
-     * \param[in] solver - The solver container holding all terms of the solution.
-     * \param[in] config - Definition of the particular problem.
-     */
-    void SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) override;
-
     /*!
      * \brief Set the objective function.
      * \param[in] geometry - Geometrical definition of the problem.
      * \param[in] config - Definition of the particular problem.
      */
     void SetAdj_ObjFunc(CGeometry *geometry, CConfig* config) override;
-
-    /*!
-     * \brief Provide the total shape sensitivity coefficient.
-     * \return Value of the geometrical sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_Geo() const override { return Total_Sens_Geo; }
-
-    /*!
-     * \brief Set the total Mach number sensitivity coefficient.
-     * \return Value of the Mach sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_Mach() const override { return Total_Sens_Mach; }
-
-    /*!
-     * \brief Set the total angle of attack sensitivity coefficient.
-     * \return Value of the angle of attack sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_AoA() const override { return Total_Sens_AoA; }
-
-    /*!
-     * \brief Set the total farfield pressure sensitivity coefficient.
-     * \return Value of the farfield pressure sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_Press() const override { return Total_Sens_Press; }
-
-    /*!
-     * \brief Set the total farfield temperature sensitivity coefficient.
-     * \return Value of the farfield temperature sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_Temp() const override { return Total_Sens_Temp; }
-
-    /*!
-     * \author H. Kline
-     * \brief Get the total Back pressure number sensitivity coefficient.
-     * \return Value of the Back sensitivity coefficient
-     *         (inviscid + viscous contribution).
-     */
-    inline su2double GetTotal_Sens_BPress() const override { return Total_Sens_BPress; }
-
-    /*!
-     * \brief Get the total density sensitivity coefficient.
-     * \return Value of the density sensitivity.
-     */
-    inline su2double GetTotal_Sens_Density() const override { return Total_Sens_Density; }
-
-    /*!
-     * \brief Get the total velocity magnitude sensitivity coefficient.
-     * \return Value of the velocity magnitude sensitivity.
-     */
-    inline su2double GetTotal_Sens_ModVel() const override { return Total_Sens_ModVel; }
-
-
     /*!
      * \brief Prepare the solver for a new recording.
      * \param[in] kind_recording - Kind of AD recording.
