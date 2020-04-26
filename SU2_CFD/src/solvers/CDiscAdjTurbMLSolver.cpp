@@ -64,6 +64,12 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
     Turb_Params.reserve(nPointDomain);
 
 
+    for (unsigned long iPoint=0; iPoint < nPoint; iPoint++){
+        Sensitivity_Turb_params.emplace_back(0.0);
+        Turb_Params.emplace_back(0.0);
+    }
+
+
     /*--- Define some auxiliary vectors related to the residual for problems with a BGS strategy---*/
 
     if (config->GetMultizone_Residual()){
@@ -85,13 +91,11 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
 
     /*--- Define some structures for locating max residuals ---*/
 
-    Point_Max = new unsigned long[nVar];
-    for (iVar = 0; iVar < nVar; iVar++) Point_Max[iVar] = 0;
+    Point_Max = new unsigned long[nVar] ();
 
     Point_Max_Coord = new su2double*[nVar];
     for (iVar = 0; iVar < nVar; iVar++) {
-        Point_Max_Coord[iVar] = new su2double[nDim];
-        for (iDim = 0; iDim < nDim; iDim++) Point_Max_Coord[iVar][iDim] = 0.0;
+        Point_Max_Coord[iVar] = new su2double[nDim]();
     }
 
     /*--- Define some auxiliary vectors related to the solution ---*/
@@ -100,13 +104,30 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
 
     for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = 1e-16;
 
-    /*--- Sensitivity definition and coefficient in all the markers ---*/
 
 
     /*--- Initialize the discrete adjoint solution to zero everywhere. ---*/
 
     nodes = new CDiscAdjVariable(Solution, nPoint, nDim, nVar, config);
     SetBaseClassPointerToNodes();
+
+    /*--- Set which points are vertices and allocate boundary data. ---*/
+
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++)
+        for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
+            iVertex = geometry->node[iPoint]->GetVertex(iMarker);
+            if (iVertex >= 0) {
+                nodes->Set_isVertex(iPoint,true);
+                break;
+            }
+        }
+
+    /*--- Store the direct solution ---*/
+
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+        nodes->SetSolution_Direct(iPoint, direct_solver->GetNodes()->GetSolution(iPoint));
+    }
+
 
     switch(KindDirect_Solver){
         case RUNTIME_FLOW_SYS:
@@ -209,7 +230,9 @@ void CDiscAdjTurbMLSolver::RegisterVariables(CGeometry *geometry, CConfig *confi
         }
     }
 
-
+    /*--- Here it is possible to register other variables as input that influence the flow solution
+     * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
+     * extracted in the ExtractAdjointVariables routine. ---*/
 }
 
 void CDiscAdjTurbMLSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
@@ -225,8 +248,7 @@ void CDiscAdjTurbMLSolver::RegisterOutput(CGeometry *geometry, CConfig *config) 
 void CDiscAdjTurbMLSolver::RegisterObj_Func(CConfig *config) {
 
     /*--- Here we can add new (scalar) objective functions ---*/
-    if (config->GetnObj()==1) {
-        switch (config->GetKind_ObjFunc()) {
+    switch (config->GetKind_ObjFunc()) {
             case DRAG_COEFFICIENT:
                 ObjFunc_Value = direct_solver->GetTotal_CD();
                 if (config->GetFixed_CL_Mode()) ObjFunc_Value -= config->GetdCD_dCL() * direct_solver->GetTotal_CL();
@@ -262,7 +284,10 @@ void CDiscAdjTurbMLSolver::RegisterObj_Func(CConfig *config) {
             case INVERSE_DESIGN_ML:
                 ObjFunc_Value = Get_Objective_Value(config);
                 break;
-        }
+            default:
+                ObjFunc_Value = 0.0;
+                break;
+    }
 
         /*--- Template for new objective functions where TemplateObjFunction()
          *  is the routine that returns the obj. function value. The computation
@@ -274,10 +299,7 @@ void CDiscAdjTurbMLSolver::RegisterObj_Func(CConfig *config) {
          *    ObjFunc_Value = TemplateObjFunction();
          *    break;
          * ---*/
-    }
-    else{
-        ObjFunc_Value = direct_solver->GetTotal_ComboObj();
-    }
+
     if (rank == MASTER_NODE) {
         AD::RegisterOutput(ObjFunc_Value);
         cout<< "The Obj Func Val is " << ObjFunc_Value << endl;
@@ -394,7 +416,7 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry,
     if (KindDirect_Solver == RUNTIME_TURB_SYS){
         for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
             global_index = geometry->node[iPoint]->GetGlobalIndex();
-            Sensitivity_Turb_params[global_index] = SU2_TYPE::GetDerivative(GetMLParam(global_index));
+            Sensitivity_Turb_params[global_index] = SU2_TYPE::GetDerivative(Turb_Params[global_index]);
         }
     }
 }
@@ -418,12 +440,7 @@ void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry,
                 Solution[iVar] += nodes->GetDual_Time_Derivative(iPoint,iVar);
             }
         }
-        if(config->GetMultizone_Problem()) {
-            direct_solver->GetNodes()->SetAdjointSolution_LocalIndex(iPoint,Solution);
-        }
-        else {
-            direct_solver->GetNodes()->SetAdjointSolution(iPoint,Solution);
-        }
+        direct_solver->GetNodes()->SetAdjointSolution(iPoint,Solution);
     }
 }
 
@@ -587,4 +604,8 @@ return 0.5 * pow((direct_solver->GetTotal_CL() - 1.074902), 2);
  */
 su2double CDiscAdjTurbMLSolver::GetTotalFieldSens () {
     return accumulate(Sensitivity_Turb_params.begin(), Sensitivity_Turb_params.end(), decltype(Sensitivity_Turb_params)::value_type(0.0));
+}
+
+void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) {
+    ExtractAdjoint_Variables(geometry,config);
 }

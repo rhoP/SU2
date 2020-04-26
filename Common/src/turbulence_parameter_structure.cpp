@@ -145,7 +145,7 @@ void CTurbML::ReadParameterValues() {
                     double par_val{0.0};
                     istringstream par_line(text_line);
                     par_line >> par_val;
-                    ML_Parameters.push_back(par_val);
+                    ML_Parameters.emplace_back(par_val);
 
                     }
                 GlobalIndex++;

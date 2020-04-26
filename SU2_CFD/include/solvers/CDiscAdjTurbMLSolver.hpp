@@ -142,6 +142,14 @@ public:
     void ExtractAdjoint_Variables(CGeometry *geometry, CConfig *config) override;
 
     /*!
+ * \brief A virtual member. Extract and set the geometrical sensitivity.
+ * \param[in] geometry - Geometrical definition of the problem.
+ * \param[in] solver - The solver container holding all terms of the solution.
+ * \param[in] config - Definition of the particular problem.
+ */
+    inline virtual void SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) override;
+
+    /*!
      * \brief Update the dual-time derivatives.
      * \param[in] geometry - Geometrical definition of the problem.
      * \param[in] solver_container - Container vector with all the solutions.
@@ -200,4 +208,6 @@ public:
    inline virtual su2double* Get_iParamML(unsigned long point_index) override {
        return &Turb_Params[point_index];
    }
+
+
 };

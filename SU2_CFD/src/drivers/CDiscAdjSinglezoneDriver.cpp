@@ -540,7 +540,11 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
     IDX_SOL = ADJFLOW_SOL;
   } else if(SecondaryVariables == MESH_DEFORM) {
     IDX_SOL = ADJMESH_SOL;
-  } else {
+  }
+  else if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
+      IDX_SOL = ADJTURB_SOL;
+  }
+  else {
     IDX_SOL = -1;
   }
 
