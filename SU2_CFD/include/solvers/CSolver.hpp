@@ -4637,6 +4637,14 @@ public:
     virtual su2double GetMLParam(unsigned long point_index) {return 0.0;}
 
     /*!
+ * \brief Get Machine Learning Parameter.
+ * \param[in] point_index: index of the point.
+ * \param[out] returns the ML Parameter value of the index.
+ */
+    inline virtual su2double* Get_iParamML(unsigned long point_index) {return nullptr;}
+
+
+    /*!
      * \brief Set Machine Learning Parameter.
      * \param[in] point_index: index of the point.
      * \param[in] val_param: new value to be set.
@@ -4649,6 +4657,12 @@ public:
        * \param[out] returns the sensitivity of the indexed ML parameter.
        */
     virtual su2double GetMLParamSens(unsigned long point_index){return 0.0;}
+
+    /*!
+       * \brief Get maximum parameter sensitivity.
+       * \param[out] returns the maximum sensitivity of the ML parameters.
+       */
+    inline virtual su2double GetTotalFieldSens(){return 0.0;}
 protected:
   /*!
    * \brief Allocate the memory for the verification solution, if necessary.

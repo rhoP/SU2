@@ -171,6 +171,11 @@ COutput::COutput(CConfig *config, unsigned short nDim, bool fem_output): femOutp
 
   headerNeeded = false;
 
+  if(config -> GetKind_Turb_Model() == 8) {
+      FieldSensitivityFileName = "field_sensitivity.csv";
+
+  }
+
 }
 
 COutput::~COutput(void) {

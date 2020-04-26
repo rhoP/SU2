@@ -369,6 +369,8 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
     const bool harmonic_balance = (config->GetTime_Marching() == HARMONIC_BALANCE);
     const bool transition    = (config->GetKind_Trans_Model() == LM);
     const bool transition_BC = (config->GetKind_Trans_Model() == BC);
+    bool discrete_adjoint = (config->GetDiscrete_Adjoint());
+    unsigned long global_index;
 
     CVariable* flowNodes = solver_container[FLOW_SOL]->GetNodes();
 
@@ -426,20 +428,33 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
         }
 
         /*--- Compute the source term ---*/
+        if (discrete_adjoint) {
+            global_index = geometry->node[iPoint]->GetGlobalIndex();
+            numerics->SetMLParam(solver_container[ADJTURB_SOL]->Get_iParamML(global_index));
+            auto residual = numerics->ComputeResidual(config);
 
-        auto residual = numerics->ComputeResidual(config, geometry->MLParam_Container->Get_iParamML(iPoint));
+            /*--- Subtract residual and the Jacobian ---*/
 
+            LinSysRes.SubtractBlock(iPoint, residual);
+
+            Jacobian.SubtractBlock2Diag(iPoint, residual.jacobian_i);
+        }
+        else {
+            numerics->SetMLParam(geometry->MLParam_Container->Get_iParamML(iPoint));
+            auto residual = numerics->ComputeResidual(config);
+
+            /*--- Subtract residual and the Jacobian ---*/
+
+            LinSysRes.SubtractBlock(iPoint, residual);
+
+            Jacobian.SubtractBlock2Diag(iPoint, residual.jacobian_i);
+        }
         /*--- Store the intermittency ---*/
 
         if (transition_BC) {
             nodes->SetGammaBC(iPoint,numerics->GetGammaBC());
         }
 
-        /*--- Subtract residual and the Jacobian ---*/
-
-        LinSysRes.SubtractBlock(iPoint, residual);
-
-        Jacobian.SubtractBlock2Diag(iPoint, residual.jacobian_i);
 
     }
 

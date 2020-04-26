@@ -1318,17 +1318,9 @@ public:
   static void tql2(su2double **V, su2double *d, su2double *e, unsigned short n);
 
     /*!
-     * \brief Residual for source term integration with field parameter.
-     * \param[in] config - Definition of the particular problem.
-     * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
-     */
-  inline virtual ResidualType<> ComputeResidual(const CConfig* config, const su2double ml_param) {
-        return ResidualType<>(nullptr,nullptr,nullptr); }
-
-    /*!
      * \brief Sets the value of the field parameter for turbulence modeling with machine learning
      */
-  inline virtual void SetMLParam (su2double value_field_parameter){}
+  inline virtual void SetMLParam (su2double* field_parameter){}
 
     /*!
      * \brief Gets the value of the field parameter for turbulence modeling with machine learning

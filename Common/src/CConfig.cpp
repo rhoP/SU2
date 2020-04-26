@@ -3349,6 +3349,7 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
         case SURFACE_SECOND_OVER_UNIFORM:
         case SURFACE_PRESSURE_DROP:
         case CUSTOM_OBJFUNC:
+        case INVERSE_DESIGN_ML:
           if (Kind_ObjFunc[iObj] != Obj_0) {
             SU2_MPI::Error(string("The following objectives can only be used for the first surface in a multi-objective \n")+
                            string("problem or as a single objective applied to multiple monitoring markers:\n")+
@@ -5452,8 +5453,7 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
           case SA_E_COMP: cout << "Compressibility Correction Edwards Spalart Allmaras" << endl; break;
           case SST:       cout << "Menter's SST"     << endl; break;
           case SST_SUST:  cout << "Menter's SST with sustaining terms" << endl; break;
-          case SA_ML:     cout << "Spalart Allmaras Model with Machine Learning" << endl
-                               << "Input file name for machine learning parameters: " << MLParam_FileName << endl;break;
+          case SA_ML:     cout << "Spalart Allmaras Model with Machine Learning" << endl;
         }
         if (QCR) cout << "Using Quadratic Constitutive Relation, 2000 version (QCR2000)" << endl;
         cout << "Hybrid RANS/LES: ";
@@ -5693,6 +5693,11 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
   }
 
   cout << "Input mesh file name: " << Mesh_FileName << endl;
+
+  if (Kind_Turb_Model == 8){
+      cout << "Input file name for field parameters: " << MLParam_FileName << endl;
+
+  }
 
   if (val_software == SU2_DOT) {
     if (DiscreteAdjoint) {
@@ -5938,6 +5943,7 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
         case VOLUME_FRACTION:            cout << "Volume fraction objective function." << endl; break;
         case TOPOL_DISCRETENESS:         cout << "Topology discreteness objective function." << endl; break;
         case TOPOL_COMPLIANCE:           cout << "Topology compliance objective function." << endl; break;
+        case INVERSE_DESIGN_ML:          cout << "Custom objective function for turbulence modeling." << endl; break;
       }
     }
     else {
@@ -7870,6 +7876,7 @@ string CConfig::GetObjFunc_Extension(string val_filename) {
         case VOLUME_FRACTION:             AdjExt = "_volfrac";  break;
         case TOPOL_DISCRETENESS:          AdjExt = "_topdisc";  break;
         case TOPOL_COMPLIANCE:            AdjExt = "_topcomp";  break;
+        case INVERSE_DESIGN_ML:           AdjExt = "_turbML";   break;
       }
     }
     else{

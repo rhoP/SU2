@@ -158,7 +158,7 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
       break;
     case SA_ML:
         /// DESCRIPTION: Root-mean square residual of the adjoint nu tilde.
-        AddHistoryOutput("MAX_ADJ_FIELD", "max[Beta]", ScreenOutputFormat::FIXED, "RMS_RES", "maximum residual of the adjoint field sensitivity.", HistoryFieldType::RESIDUAL);
+        AddHistoryOutput("MAX_ADJ_NU_TILDE", "max[A_nu]", ScreenOutputFormat::FIXED, "MAX_RES", "Maximum residual of the adjoint nu tilde.", HistoryFieldType::RESIDUAL);
         break;
     default: break;
     }
@@ -209,6 +209,14 @@ void CAdjFlowIncOutput::SetHistoryOutputFields(CConfig *config){
   /// DESCRIPTION: Sensitivity of the objective function with respect to the outlet pressure.
   AddHistoryOutput("SENS_PRESS_OUT",  "Sens_Pout",  ScreenOutputFormat::SCIENTIFIC, "SENSITIVITY", "Sensitivity of the objective function with respect to the outlet pressure.", HistoryFieldType::COEFFICIENT);
   /// END_GROUP
+    if (!config->GetFrozen_Visc_Disc() || !config->GetFrozen_Visc_Cont()){
+        switch(turb_model){
+            case SA_ML:
+                /// DESCRIPTION: Sensitivity of the field parameters.
+                AddHistoryOutput("TOTAL_ADJ_FIELD", "D[A_Beta]", ScreenOutputFormat::SCIENTIFIC, "SENSITIVITY", "Total Sensitivity of the field parameters.", HistoryFieldType::COEFFICIENT);
+            default: break;
+        }
+    }
 
 }
 
@@ -234,13 +242,16 @@ void CAdjFlowIncOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CS
   }
   if (!config->GetFrozen_Visc_Disc() || !config->GetFrozen_Visc_Cont()){
     switch(turb_model){
-    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP: case SA_ML:
+    case SA: case SA_NEG: case SA_E: case SA_COMP: case SA_E_COMP:
       SetHistoryOutputValue("RMS_ADJ_NU_TILDE", log10(adjturb_solver->GetRes_RMS(0)));
       break;
     case SST:
       SetHistoryOutputValue("RMS_ADJ_TKE", log10(adjturb_solver->GetRes_RMS(0)));
       SetHistoryOutputValue("RMS_ADJ_DISSIPATION",    log10(adjturb_solver->GetRes_RMS(1)));
       break;
+    case SA_ML:
+    SetHistoryOutputValue("RMS_ADJ_NU_TILDE", log10(adjturb_solver->GetRes_RMS(0)));
+    SetHistoryOutputValue("TOTAL_ADJ_FIELD", (adjturb_solver->GetTotalFieldSens()));
     default: break;
     }
   }
@@ -407,7 +418,14 @@ void CAdjFlowIncOutput::SetVolumeOutputFields(CConfig *config){
   /// DESCRIPTION: Sensitivity in normal direction.
   AddVolumeOutput("SENSITIVITY", "Surface_Sensitivity", "SENSITIVITY", "sensitivity in normal direction");
   /// END_GROUP
-
+    if (!config->GetFrozen_Visc_Disc()){
+        switch(turb_model){
+            case SA_ML:
+                AddVolumeOutput("ADJ_BETA", "Field_Sensitivity", "SENSITIVITY", "sensitivity of the field parameter");
+            break;
+            default: break;
+        }
+    }
 }
 
 void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned long iPoint){
@@ -459,7 +477,7 @@ void CAdjFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSo
       SetVolumeOutputValue("ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0));
       break;
     case SA_ML:
-      SetVolumeOutputValue("ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0));
+      SetVolumeOutputValue("ADJ_BETA", iPoint, solver[ADJTURB_SOL]->GetMLParamSens(iPoint));
       break;
     case NONE:
       break;

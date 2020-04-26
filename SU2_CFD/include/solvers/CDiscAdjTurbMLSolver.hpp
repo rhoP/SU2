@@ -44,8 +44,8 @@ private:
     su2double Reg_Value;           /*!< \brief Value of the regularization function. */
     su2double Reg_Param_Value;     /*!< \brief Value of the objective function. */
 
-    vector<su2double> Turb_Params;
-    su2double *Sensitivity_Turb_params = nullptr; /*!< \brief Auxiliary vector for the geometry solution (dimension nDim instead of nVar). */
+    vector<su2double> Turb_Params;             /*!< \brief Vector with field parameters. */
+    vector<su2double> Sensitivity_Turb_params; /*!< \brief Vector with field parameter sensitivities. */
 
     CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
 
@@ -185,4 +185,19 @@ public:
        * \param[out] returns the sensitivity of the indexed ML parameter.
        */
     virtual su2double GetMLParamSens(unsigned long point_index) override {return Sensitivity_Turb_params[point_index];}
+
+    /*!
+   * \brief Get maximum parameter sensitivity.
+   * \param[out] returns the maximum sensitivity of the ML parameters.
+   */
+   virtual su2double GetTotalFieldSens () override;
+
+    /*!
+     * \brief Get Machine Learning Parameter.
+     * \param[in] point_index: index of the point.
+     * \param[out] returns the ML Parameter value of the index.
+     */
+   inline virtual su2double* Get_iParamML(unsigned long point_index) override {
+       return &Turb_Params[point_index];
+   }
 };

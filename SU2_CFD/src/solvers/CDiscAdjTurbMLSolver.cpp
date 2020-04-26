@@ -59,7 +59,7 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
     Residual_Max  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_Max[iVar]  = 1.0;
 
     /*--- Instantiate the turbulence parameter adjoint variables---*/
-    Sensitivity_Turb_params = new su2double[nPointDomain];
+    Sensitivity_Turb_params.reserve(nPoint);
 
     Turb_Params.reserve(nPointDomain);
 
@@ -135,7 +135,6 @@ CDiscAdjTurbMLSolver::~CDiscAdjTurbMLSolver(void) {
 
     if (nodes != nullptr) delete nodes;
 
-    if (Sensitivity_Turb_params != nullptr) delete[] Sensitivity_Turb_params;
 }
 
 void CDiscAdjTurbMLSolver::SetRecording(CGeometry* geometry, CConfig *config){
@@ -199,13 +198,14 @@ void CDiscAdjTurbMLSolver::RegisterSolution(CGeometry *geometry, CConfig *config
 
 void CDiscAdjTurbMLSolver::RegisterVariables(CGeometry *geometry, CConfig *config, bool reset) {
 
+    unsigned long iPoint, global_index;
     nPoint   =  geometry->GetnPoint();
 
     if (KindDirect_Solver == RUNTIME_TURB_SYS){
-        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
-            Turb_Params[iPoint] = geometry->MLParam_Container->Get_iParamML(iPoint);
-            AD::RegisterInput(Turb_Params[iPoint]);
-            geometry->MLParam_Container->Set_iParamML(Turb_Params[iPoint], iPoint);
+        for (iPoint = 0; iPoint < nPoint; iPoint++){
+            global_index = geometry->node[iPoint]->GetGlobalIndex();
+            Turb_Params[global_index] = *geometry->MLParam_Container->Get_iParamML(iPoint);
+            AD::RegisterInput(Turb_Params[global_index]);
         }
     }
 
@@ -280,6 +280,7 @@ void CDiscAdjTurbMLSolver::RegisterObj_Func(CConfig *config) {
     }
     if (rank == MASTER_NODE) {
         AD::RegisterOutput(ObjFunc_Value);
+        cout<< "The Obj Func Val is " << ObjFunc_Value << endl;
     }
 }
 
@@ -388,10 +389,12 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig 
 void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry,
                                                     CConfig *config) {
     nPoint = geometry->GetnPoint();
+    unsigned long global_index;
 
     if (KindDirect_Solver == RUNTIME_TURB_SYS){
         for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
-            Sensitivity_Turb_params[iPoint] = SU2_TYPE::GetDerivative(geometry->MLParam_Container->Get_iParamML(iPoint));
+            global_index = geometry->node[iPoint]->GetGlobalIndex();
+            Sensitivity_Turb_params[global_index] = SU2_TYPE::GetDerivative(GetMLParam(global_index));
         }
     }
 }
@@ -567,13 +570,21 @@ void CDiscAdjTurbMLSolver::LoadRestart(CGeometry **geometry,
 
     /*--- Delete the class memory that is used to load the restart. ---*/
 
-    if (Restart_Vars != NULL) delete [] Restart_Vars;
-    if (Restart_Data != NULL) delete [] Restart_Data;
-    Restart_Vars = NULL; Restart_Data = NULL;
+    if (Restart_Vars != nullptr) delete [] Restart_Vars;
+    if (Restart_Data != nullptr) delete [] Restart_Data;
+    Restart_Vars = nullptr; Restart_Data = nullptr;
 
 }
 
 su2double CDiscAdjTurbMLSolver::Get_Objective_Value(CConfig *config) {
 
 return 0.5 * pow((direct_solver->GetTotal_CL() - 1.074902), 2);
+}
+
+/*!
+ * \brief Get maximum parameter sensitivity.
+ * \param[out] returns the maximum sensitivity of the ML parameters.
+ */
+su2double CDiscAdjTurbMLSolver::GetTotalFieldSens () {
+    return accumulate(Sensitivity_Turb_params.begin(), Sensitivity_Turb_params.end(), decltype(Sensitivity_Turb_params)::value_type(0.0));
 }

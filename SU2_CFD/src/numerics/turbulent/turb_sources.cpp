@@ -1117,9 +1117,10 @@ CSourcePieceWise_TurbSA_ML::CSourcePieceWise_TurbSA_ML(unsigned short val_nDim,
     transition = (config->GetKind_Trans_Model() == BC);
 }
 
-CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config, const su2double ml_param) {
+CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config) {
 
-//  AD::StartPreacc();
+  AD::StartPreacc();
+  AD::SetPreaccIn(*ml_param);
 //  AD::SetPreaccIn(V_i, nDim+6);
 //  AD::SetPreaccIn(Vorticity_i, nDim);
 //  AD::SetPreaccIn(StrainMag_i);
@@ -1131,8 +1132,6 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
     su2double vmag, rey, re_theta, re_theta_t, re_v;
     su2double tu , nu_cr, nu_t, nu_BC, chi_1, chi_2, term1, term2, term_exponential;
 
-    /*--- Assign the machine learning parameter ---*/
-    val_ml_param = ml_param;
 
 
     if (incompressible) {
@@ -1215,7 +1214,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
             Production = gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
         }
         else {
-            Production = val_ml_param*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = *ml_param*cb1*Shat*TurbVar_i[0]*Volume;
         }
 
         /*--- Destruction term ---*/
@@ -1265,8 +1264,8 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 
     }
 
-//  AD::SetPreaccOut(Residual);
-//  AD::EndPreacc();
+  AD::SetPreaccOut(Residual);
+  AD::EndPreacc();
 
     return ResidualType<>(&Residual, &Jacobian_i, nullptr);
 

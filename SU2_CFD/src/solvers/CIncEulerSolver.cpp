@@ -3885,6 +3885,9 @@ void CIncEulerSolver::Evaluate_ObjFunc(CConfig *config) {
     case CUSTOM_OBJFUNC:
       Total_ComboObj+=Weight_ObjFunc*Total_Custom_ObjFunc;
       break;
+    case INVERSE_DESIGN_ML:
+      Total_ComboObj+=0.5 * pow((Total_CL - 1.074902), 2);
+      break;
     default:
       break;
   }
