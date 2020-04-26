@@ -103,11 +103,7 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
 
   /*--- Start timer to track preprocessing for benchmarking. ---*/
 
-#ifndef HAVE_MPI
-  StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StartTime = MPI_Wtime();
-#endif
+  StartTime = SU2_MPI::Wtime();
 
   /*--- Initialize containers with null --- */
 
@@ -266,11 +262,7 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
 
   /*--- Preprocessing time is reported now, but not included in the next compute portion. ---*/
 
-#ifndef HAVE_MPI
-  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StopTime = MPI_Wtime();
-#endif
+  StopTime = SU2_MPI::Wtime();
 
   /*--- Compute/print the total time for performance benchmarking. ---*/
 
@@ -292,11 +284,8 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
   }
 
   /*--- Reset timer for compute/output performance benchmarking. ---*/
-#ifndef HAVE_MPI
-  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StopTime = MPI_Wtime();
-#endif
+
+  StopTime = SU2_MPI::Wtime();
 
   /*--- Compute/print the total time for performance benchmarking. ---*/
 
@@ -304,11 +293,8 @@ CDriver::CDriver(char* confFile, unsigned short val_nZone, SU2_Comm MPICommunica
   UsedTimePreproc = UsedTime;
 
   /*--- Reset timer for compute performance benchmarking. ---*/
-#ifndef HAVE_MPI
-  StartTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StartTime = MPI_Wtime();
-#endif
+
+  StartTime = SU2_MPI::Wtime();
 
 }
 
@@ -559,11 +545,8 @@ void CDriver::Postprocessing() {
 
   /*--- Stop the timer and output the final performance summary. ---*/
 
-#ifndef HAVE_MPI
-  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StopTime = MPI_Wtime();
-#endif
+  StopTime = SU2_MPI::Wtime();
+
   UsedTime = StopTime-StartTime;
   UsedTimeCompute += UsedTime;
 
@@ -1339,9 +1322,11 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
 
   if (restart || restart_flow) {
     if (euler || ns) {
+      SU2_OMP_PARALLEL_(if(solver[MESH_0][FLOW_SOL]->GetHasHybridParallel()))
       solver[MESH_0][FLOW_SOL]->LoadRestart(geometry, solver, config, val_iter, update_geo);
     }
     if (turbulent) {
+      SU2_OMP_PARALLEL_(if(solver[MESH_0][TURB_SOL]->GetHasHybridParallel()))
       solver[MESH_0][TURB_SOL]->LoadRestart(geometry, solver, config, val_iter, update_geo);
     }
     if (config->AddRadiation()) {
@@ -3116,14 +3101,10 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
   /*--- Synchronization point after a single solver iteration. Compute the
    wall clock time required. ---*/
 
-#ifndef HAVE_MPI
-  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StopTime = MPI_Wtime();
-#endif
+  StopTime = SU2_MPI::Wtime();
+
   IterCount++;
   UsedTime = (StopTime - StartTime) + UsedTimeCompute;
-
 
   /*--- Check if there is any change in the runtime parameters ---*/
 
@@ -3299,11 +3280,8 @@ bool CTurbomachineryDriver::Monitor(unsigned long ExtIter) {
   /*--- Synchronization point after a single solver iteration. Compute the
    wall clock time required. ---*/
 
-#ifndef HAVE_MPI
-  StopTime = su2double(clock())/su2double(CLOCKS_PER_SEC);
-#else
-  StopTime = MPI_Wtime();
-#endif
+  StopTime = SU2_MPI::Wtime();
+
   IterCount++;
   UsedTime = (StopTime - StartTime);
 
