@@ -46,6 +46,7 @@ private:
 
     vector<su2double> Turb_Params;             /*!< \brief Vector with field parameters. */
     vector<su2double> Sensitivity_Turb_params; /*!< \brief Vector with field parameter sensitivities. */
+    string FieldSensFileName;
 
     CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
 
@@ -209,5 +210,5 @@ public:
        return &Turb_Params[point_index];
    }
 
-
+    void WriteFieldSensitivityFile();
 };

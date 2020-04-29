@@ -38,10 +38,12 @@
 #include "../../include/output/CAdjFlowIncOutput.hpp"
 #include "../../include/output/CHeatOutput.hpp"
 #include "../../include/output/CAdjHeatOutput.hpp"
+#include "../../include/output/CAdjTurbOutput.hpp"
 
 COutput* COutputFactory::createOutput(ENUM_MAIN_SOLVER kindSolver, CConfig* config, int nDim){
 
   COutput* output = nullptr;
+  bool ml = config->GetKind_Turb_Model() ==8;
 
   switch(kindSolver){
     case EULER: case NAVIER_STOKES: case RANS:
@@ -58,10 +60,10 @@ COutput* COutputFactory::createOutput(ENUM_MAIN_SOLVER kindSolver, CConfig* conf
       break;
     case DISC_ADJ_EULER: case DISC_ADJ_NAVIER_STOKES: case DISC_ADJ_RANS:
     case ADJ_EULER: case ADJ_NAVIER_STOKES: case ADJ_RANS:
-      output = new CAdjFlowCompOutput(config, nDim);
+      ml? output = new CAdjTurbOutput(config,nDim) : output = new CAdjFlowCompOutput(config, nDim);
       break;
     case DISC_ADJ_INC_EULER: case DISC_ADJ_INC_NAVIER_STOKES: case DISC_ADJ_INC_RANS:
-      output = new CAdjFlowIncOutput(config, nDim);
+      ml? output = new CAdjTurbOutput(config,nDim) : output = new CAdjFlowIncOutput(config, nDim);
       break;
     case DISC_ADJ_FEM:
       output = new CAdjElasticityOutput(config, nDim);

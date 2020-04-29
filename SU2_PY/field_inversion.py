@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 ## \file field_inversion.py
-#  \brief Python script for performing the shape optimization.
-#  \author R. Pochampalli
+#  \brief Python script to drive SU2 in topology optimization.
 #  \version 7.0.3 "Blackbird"
 #
 # SU2 Project Website: https://su2code.github.io
@@ -24,146 +23,395 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
+#
+#########################################################################################
+#                                                                                       #
+# This script is provided to show how the feature can be used.                          #
+# It is not meant to be generic, topology optimization calls for some parameters to be  #
+# ramped and the strategy to do so is hard coded.                                       #
+# A bit of hacking will be required if you want to deviate from what is done here.      #
+# The hard coded bits are explained as they appear.                                     #
+#                                                                                       #
+#########################################################################################
 
 import os
-import shutil
 import sys
-from optparse import OptionParser
+import math
+import time
+import shutil
+import subprocess as sp
+import numpy as np
+import scipy.optimize
 
-sys.path.append(os.environ['SU2_RUN'])
-import SU2
+####### SETUP #######
 
-# -------------------------------------------------------------------
-#  Main
-# -------------------------------------------------------------------
+obj_scale = 1/1.25e-3 # scale the objective so that it starts at 1-4
+con_scale = 1/0.5     # 1 over upper bound (e.g. max volume)
+var_scale = 1.0       # variable scale
 
-def main():
+# maximum number of iterations
+maxJev_t = 1000
+# max iters for gray initialization, i.e. soft filter settings
+maxJev_i = 200
+# num iters between updates of the filter settings and constraint penalty factor
+nJev_u   = 40
 
-    parser=OptionParser()
-    parser.add_option("-f", "--file", dest="filename",
-                      help="read config from FILE", metavar="FILE")
-    parser.add_option("-r", "--name", dest="projectname", default='',
-                      help="try to restart from project file NAME", metavar="NAME")
-    parser.add_option("-n", "--partitions", dest="partitions", default=1,
-                      help="number of PARTITIONS", metavar="PARTITIONS")
-    parser.add_option("-g", "--gradient", dest="gradient", default="DISCRETE_ADJOINT",
-                      help="Method for computing the GRADIENT (CONTINUOUS_ADJOINT, DISCRETE_ADJOINT, FINDIFF, NONE)", metavar="GRADIENT")
-    parser.add_option("-o", "--optimization", dest="optimization", default="SLSQP",
-                      help="OPTIMIZATION techique (SLSQP, CG, BFGS, POWELL)", metavar="OPTIMIZATION")
-    parser.add_option("-q", "--quiet", dest="quiet", default="True",
-                      help="True/False Quiet all SU2 output (optimizer output only)", metavar="QUIET")
-    parser.add_option("-z", "--zones", dest="nzones", default="1",
-                      help="Number of Zones", metavar="ZONES")
+# tolerances
+ftol_u = 1e-5    # during updates
+ftol_f = 1e-7    # final iteration
+# the exterior penalty method is used to impose the constraint,
+# this is the maximum constraint violation, below it the penalty factor is not increased
+htol   = 5e-3
+
+# general options for L-BFGS-B
+options={'disp': True, 'maxcor': 10, 'ftol': ftol_u, 'gtol': 1e-18}
+
+# these are the commands for the direct and adjoint runs, modify to run parallel
+commands = ["SU2_CFD ", "SU2_CFD_AD "]
+
+# file through which SU2 gets the design densities
+inputFile = "element_properties.dat"
+
+# names of the output files [objective value, objective gradient, constraint value, ...]
+outputFiles = ["grad_compliance.dat", "grad_vol_frac.dat"]
+
+# settings for direct run and adjoint of the objective and constraint
+fnames = ["settings.cfg", "settings_compliance.cfg", "settings_volfrac.cfg"]
 
 
-    (options, args)=parser.parse_args()
 
-    # process inputs
-    options.partitions  = int( options.partitions )
-    options.quiet       = options.quiet.upper() == 'TRUE'
-    options.gradient    = options.gradient.upper()
-    options.nzones      = int( options.nzones )
+####### SU2 Driver #######
 
-    sys.stdout.write('\n-----------------------------------------------------------------------\n')
-    sys.stdout.write('|    ___ _   _ ___                                                      |\n')
-    sys.stdout.write('|   / __| | | |_  )   Release 7.0.3 \"Blackbird\"                       |\n')
-    sys.stdout.write('|   \\__ \\ |_| |/ /                                                    |\n')
-    sys.stdout.write('|   |___/\\___//___|  Field Inversion for Turbulence Modeling           |\n')
-    sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('-------------------------------------------------------------------------\n')
-    sys.stdout.write('| SU2 Project Website: https://su2code.github.io                        |\n')
-    sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('| The SU2 Project is maintained by the SU2 Foundation                   |\n')
-    sys.stdout.write('| (http://su2foundation.org)                                            |\n')
-    sys.stdout.write('-------------------------------------------------------------------------\n')
-    sys.stdout.write('| Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)                |\n')
-    sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('| SU2 is free software; you can redistribute it and/or                  |\n')
-    sys.stdout.write('| modify it under the terms of the GNU Lesser General Public            |\n')
-    sys.stdout.write('| License as published by the Free Software Foundation; either          |\n')
-    sys.stdout.write('| version 2.1 of the License, or (at your option) any later version.    |\n')
-    sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('| SU2 is distributed in the hope that it will be useful,                |\n')
-    sys.stdout.write('| but WITHOUT ANY WARRANTY; without even the implied warranty of        |\n')
-    sys.stdout.write('| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU      |\n')
-    sys.stdout.write('| Lesser General Public License for more details.                       |\n')
-    sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('| You should have received a copy of the GNU Lesser General Public      |\n')
-    sys.stdout.write('| License along with SU2. If not, see <http://www.gnu.org/licenses/>.   |\n')
-    sys.stdout.write('-------------------------------------------------------------------------\n')
+class Driver:
+  def __init__(self,commands,inputFile,configFiles,outputFiles):
+    self._inputFile  = inputFile
+    self._objValFile = "history.csv"
+    self._objDerFile = outputFiles[0]
+    self._conValFile = "history.csv"
+    self._conDerFile = outputFiles[1]
+    self._objValCommand = commands[0]+configFiles[0]+" > objval.stdout"
+    self._objDerCommand = commands[1]+configFiles[1]+" > objder.stdout"
+    self._conDerCommand = commands[1]+configFiles[2]+" > conval.stdout"
+  #end
 
-    field_inversion( options.filename    ,
-                        options.projectname ,
-                        options.partitions  ,
-                        options.gradient    ,
-                        options.optimization ,
-                        options.quiet       ,
-                        options.nzones      )
+  def _assert_isfinite(self,val):
+    if math.isinf(val) or math.isnan(val):
+      raise ValueError
+  #end
 
-#: main()
+  def _write_input(self,x):
+    fid = open(self._inputFile,"w")
+    lines = ["\n"]
+    for val in x:
+      lines.append("0  0  0  0  0  "+str(val/var_scale)+"\n")
+    #end
+    fid.writelines(lines)
+    fid.close()
+  #end
 
-def field_inversion   ( filename                           ,
-                        projectname  = ''                  ,
-                        partitions   = 0                   ,
-                        gradient     = 'DISCRETE_ADJOINT'  ,
-                        optimization = 'SLSQP'             ,
-                        quiet        = False               ,
-                        nzones       = 1                   ):
-    # Config
-    config = SU2.io.Config(filename)
-    config.NUMBER_PART = partitions
-    config.NZONES      = int( nzones )
-    if quiet: config.CONSOLE = 'CONCISE'
-    config.GRADIENT_METHOD = gradient
+  def obj_val(self,x):
+    # write inputs
+    self._write_input(x)
 
-    its               = int ( config.OPT_ITERATIONS )                      # number of opt iterations
-    bound_upper       = float ( config.OPT_BOUND_UPPER )                   # variable bound to be scaled by the line search
-    bound_lower       = float ( config.OPT_BOUND_LOWER )                   # variable bound to be scaled by the line search
-    relax_factor      = float ( config.OPT_RELAX_FACTOR )                  # line search scale
-    gradient_factor   = float ( config.OPT_GRADIENT_FACTOR )               # objective function and gradient scale
-    def_dv            = config.DEFINITION_DV                               # complete definition of the desing variable #TODO review
-    n_dv              = sum(def_dv['SIZE'])                                # number of design variables                 #TODO review
-    accu              = float ( config.OPT_ACCURACY ) * gradient_factor    # optimizer accuracy
-    x0                = [0.0]*n_dv                                         # initial design                             #TODO review
-    xb_low            = [float(bound_lower)/float(relax_factor)]*n_dv      # lower dv bound it includes the line search acceleration factor
-    xb_up             = [float(bound_upper)/float(relax_factor)]*n_dv      # upper dv bound it includes the line search acceleration fa
-    xb                = list(zip(xb_low, xb_up)) # design bounds
+    # clear previous output and run direct solver
+    try:    os.remove(self._objValFile)
+    except: pass
 
-    # State
-    state = SU2.io.State()
-    state.find_files(config)
+    try:
+      sp.call(self._objValCommand,shell=True)
+      fid = open(self._objValFile,"r"); val = float(fid.readlines()[1]); fid.close()
+      # the return code of mpirun is useless, we test the value of the function
+      self._assert_isfinite(val)
+    except:
+      raise RuntimeError("Objective function evaluation failed")
+    #end
 
-    # Project
-    if os.path.exists(projectname):
-        project = SU2.io.load_data(projectname)
-        project.config = config
+    return val*obj_scale
+  #end
+
+  def obj_der(self,x):
+    # inputs written in obj_val_driver
+
+    # clear previous output and run direct solver
+    try:    os.remove(self._objDerFile)
+    except: pass
+    N = x.shape[0]
+    y = np.ndarray((N,))
+
+    try:
+      # main command
+      sp.call(self._objDerCommand,shell=True)
+
+      fid = open(self._objDerFile,"r"); lines = fid.readlines(); fid.close()
+      for i in range(N):
+        val = float(lines[i][0:-1])
+        self._assert_isfinite(val)
+        y[i] = val*obj_scale/var_scale
+      #end
+    except:
+      raise RuntimeError("Objective gradient evaluation failed")
+    #end
+
+    return y
+  #end
+
+  def con_val(self,x):
+    # inputs written in obj_val_driver
+
+    # clear previous output and run solver
+    try:    os.remove(self._conValFile)
+    except: pass
+    try:    os.remove(self._conDerFile)
+    except: pass
+
+    try:
+      sp.call(self._conDerCommand,shell=True)
+      fid = open(self._conValFile,"r"); val = float(fid.readlines()[1]); fid.close()
+      self._assert_isfinite(val)
+    except:
+      raise RuntimeError("Constraint function evaluation failed")
+    #end
+
+    return val*con_scale-1
+  #end
+
+  def con_der(self,x):
+    # inputs written in obj_val_driver
+
+    # adjoint solver already ran
+    N = x.shape[0]
+    y = np.ndarray((N,))
+
+    # read result
+    try:
+      fid = open(self._conDerFile,"r"); lines = fid.readlines(); fid.close()
+      for i in range(N):
+        val = float(lines[i][0:-1])
+        self._assert_isfinite(val)
+        y[i] = val*con_scale/var_scale
+      #end
+    except:
+      raise RuntimeError("Constraint function evaluation failed")
+    #end
+
+    return y
+  #end
+#end
+
+
+####### Helpers #######
+
+# updates the parameters in the config files
+def update_settings(fnames,params):
+  for fname in fnames:
+    fid = open(fname,"r"); lines = fid.readlines(); fid.close()
+
+    for param in params:
+      for i in range(len(lines)):
+        if lines[i].startswith(param.name()):
+          lines[i] = param.name()+"= "+repr(param.value())+"\n"
+          break
+        #end
+      #end
+    #end
+
+    fid = open(fname,"w"); fid.writelines(lines); fid.close()
+  #end
+#end
+
+
+# use a list as a function
+class ValueList:
+  def __init__(self,values):
+    self._values = values
+    self._ub = len(values)-1
+  def val(self,idx):
+    return self._values[min(idx,self._ub)]
+#end
+
+
+# helper class to hold parameters that are ramped
+class IncrParam:
+  def __init__(self,name,init,incr,maxi,func=None):
+    self._name = name
+    self._init = init
+    self._incr = incr
+    self._maxi = maxi
+    self._func = func
+    self._value = 0
+    self.reset()
+  #end
+
+  def name(self):
+    return self._name
+
+  def reset(self):
+    self._value = self._init
+
+  def update(self):
+    self._value = min(self._value+self._incr,self._maxi)
+
+  def finished(self):
+    return self._value == self._maxi
+
+  def value(self):
+    if self._func == None:
+      return self._value
     else:
-        project = SU2.opt.Project(config,state)
-
-    # Optimize
-    if optimization == 'SLSQP':
-      SU2.opt.SLSQP(project,x0,xb,its,accu)
-    if optimization == 'CG':
-      SU2.opt.CG(project,x0,xb,its,accu)
-    if optimization == 'BFGS':
-      SU2.opt.BFGS(project,x0,xb,its,accu)
-    if optimization == 'POWELL':
-      SU2.opt.POWELL(project,x0,xb,its,accu)
+      return self._func(self._value)
+    #end
+  #end
+#end
 
 
-    # rename project file
-    if projectname:
-        shutil.move('project.pkl',projectname)
+# Exterior penalty method wrapper
+class ExteriorPenaltyMethod:
+  def __init__(self,driver,r0=8,rmax=1024,c=2):
+    self._driver = driver
+    self._r  = r0
+    self._c  = c
+    self._rmax = rmax
+    self._fval = 0
+    self._hval = 0
+    # timers
+    self._funTime = 0
+    self._jacTime = 0
+  #end
 
-    return project
+  def fun(self,x):
+    self._funTime -= time.time()
+    f = self._driver.obj_val(x)
+    h = self._driver.con_val(x)
+    self._funTime += time.time()
+    self._fval = f
+    self._hval = h
+    return f+self._r*max(0.0,h)*h
+  #end
 
-#: field_inversion()
+  def jac(self,x):
+    self._jacTime -= time.time()
+    df = self._driver.obj_der(x)
+    dh = self._driver.con_der(x)
+    self._jacTime += time.time()
+
+    # log current values of f and h
+    hisfile.write(repr(self._fval)+"  "+repr(self._hval)+"\n")
+    hisfile.flush()
+
+    return df+2*self._r*max(0.0,self._hval)*dh
+  #end
+
+  def update(self):
+    self._r = min(self._r*self._c,self._rmax)
+  #end
+#end
 
 
-# -------------------------------------------------------------------
-#  Run Main Program
-# -------------------------------------------------------------------
+####### RUN OPTIMIZATION #######
 
-# this is only accessed if running from command prompt
-if __name__ == '__main__':
-    main()
+paramValues = ValueList(filterParam)
+params = [IncrParam("TOPOL_OPTIM_KERNEL_PARAM",0,1,len(filterParam)-1,paramValues.val)]
+
+obj = ExteriorPenaltyMethod(Driver(commands,inputFile,fnames,outputFiles))
+
+logfile = open("optimization.log","w")
+hisfile = open("optimization.his","w")
+
+line = "### Optimization Started ###\n"
+print(line); logfile.write(line+"\n"); logfile.flush()
+
+totTime = -time.time()
+nJacEval = 0; nFunEval = 0; itCount = 0;
+
+# initial values and bounds
+fid = open(inputFile,"r"); N = len(fid.readlines())-1; fid.close()
+x  = np.ones((N,))*var_scale/con_scale
+lb = np.zeros((N,))
+ub = np.ones((N,))*var_scale
+bounds = np.array((lb,ub),float).transpose()
+
+## 1st Phase: Run with "gray" filter settings ##
+# get the constraint and function within some tolerance
+line = "1: Gray filter (initialization)"
+print(line); logfile.write(line+"\n"); logfile.flush()
+
+update_settings(fnames,params)
+success = False
+
+while nJacEval < maxJev_i:
+  options["maxiter"] = min(nJev_u,maxJev_i-nJacEval)
+
+  optimum = scipy.optimize.minimize(obj.fun, x, method="L-BFGS-B", jac=obj.jac,
+                                    bounds=bounds, options=options)
+  itCount += 1
+  x = optimum.x
+  nJacEval += optimum.nit
+  nFunEval += optimum.nfev
+
+  line = " Iter {:d}: f= {:f}  h= {:e}  r= {:f}  nfev= {:d}  njev= {:d}".\
+    format(itCount, obj._fval, obj._hval, obj._r, optimum.nfev, optimum.nit)
+  print(line); logfile.write(line+"\n"); logfile.flush()
+
+  if obj._hval > htol: # increase penalty
+    obj.update()
+  elif optimum.success: # check convergence
+    success = True
+    break
+  else: # continue until convergence or maxJev_i
+    pass
+  #end
+#end
+tmp = inputFile.split(".")
+shutil.copy(inputFile,tmp[0]+"_gray."+tmp[1])
+
+if not(success):
+  line = " Initialization did not converge to desired tolerances"
+  print(line); logfile.write(line+"\n"); logfile.flush()
+#end
+
+## 2nd Phase: Make filter more "black-white" ##
+line = "\n2: Black-White filter"
+print(line); logfile.write(line+"\n"); logfile.flush()
+
+options["maxiter"] = nJev_u
+finalIter = False
+
+while nJacEval < maxJev_t and not(finalIter):
+  finalIter = True
+  for i in range(len(params)):
+    params[i].update()
+    finalIter &= params[i].finished()
+  #end
+  update_settings(fnames,params)
+  if obj._hval > htol: obj.update()
+
+  options["ftol"] = (ftol_u,ftol_f)[int(finalIter)]
+  options["maxiter"] = max(nJev_u,(maxJev_t-nJacEval)*int(finalIter))
+
+  optimum = scipy.optimize.minimize(obj.fun, x, method="L-BFGS-B", jac=obj.jac,
+                                    bounds=bounds, options=options)
+  itCount += 1
+  x = optimum.x
+  nJacEval += optimum.nit
+  nFunEval += optimum.nfev
+
+  line = " Iter {:d}: f= {:f}  h= {:e}  r= {:f}  nfev= {:d}  njev= {:d}".\
+    format(itCount, obj._fval, obj._hval, obj._r, optimum.nfev, optimum.nit)
+  print(line); logfile.write(line+"\n"); logfile.flush()
+#end
+tmp = inputFile.split(".")
+shutil.copy(inputFile,tmp[0]+"_bw."+tmp[1])
+
+success = finalIter and obj._hval < htol and optimum.success
+totTime += time.time()
+
+line = "\n### Optimization Finished ###\n"+\
+       "Summary: "+("Failure\n","Success\n")[int(success)]+\
+       "  fval: {:f}  hval: {:e}\n".format(obj._fval,obj._hval)+\
+       "Details:\n"+\
+       "  iter: {:d}  ttot: {:f}s\n".format(itCount,totTime)+\
+       "  nfev: {:d}  tfev: {:f}s\n".format(nFunEval,obj._funTime)+\
+       "  njev: {:d}  tjev: {:f}s\n".format(nJacEval,obj._jacTime)
+print(line); logfile.write(line+"\n")
+logfile.close()
+hisfile.close()

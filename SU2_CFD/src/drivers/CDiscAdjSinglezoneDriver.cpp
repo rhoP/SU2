@@ -486,7 +486,7 @@ void CDiscAdjSinglezoneDriver::Print_DirectResidual(unsigned short kind_recordin
     cout << endl << "Recording the computational graph with respect to the ";
     switch (SecondaryVariables){
       case MESH_COORDS: cout << "mesh coordinates." << endl;    break;
-      case ML_TURBULENCE_VARIABLES: cout << "Field parameters for turbulence modeling." << endl;
+      case ML_TURBULENCE_VARIABLES: cout << "field parameters for turbulence modeling." << endl; break;
       default:          cout << "secondary variables." << endl; break;
      }
   }
@@ -541,9 +541,9 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
   } else if(SecondaryVariables == MESH_DEFORM) {
     IDX_SOL = ADJMESH_SOL;
   }
-  else if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
-      IDX_SOL = ADJTURB_SOL;
-  }
+//  else if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
+//      IDX_SOL = ADJTURB_SOL;
+//  }
   else {
     IDX_SOL = -1;
   }

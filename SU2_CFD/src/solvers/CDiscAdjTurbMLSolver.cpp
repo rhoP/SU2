@@ -69,7 +69,7 @@ CDiscAdjTurbMLSolver::CDiscAdjTurbMLSolver(CGeometry *geometry,
         Turb_Params.emplace_back(0.0);
     }
 
-
+    FieldSensFileName = config->Get_FieldSensitivity_FileName();
     /*--- Define some auxiliary vectors related to the residual for problems with a BGS strategy---*/
 
     if (config->GetMultizone_Residual()){
@@ -419,6 +419,8 @@ void CDiscAdjTurbMLSolver::ExtractAdjoint_Variables(CGeometry *geometry,
             Sensitivity_Turb_params[global_index] = SU2_TYPE::GetDerivative(Turb_Params[global_index]);
         }
     }
+
+    WriteFieldSensitivityFile();
 }
 
 void CDiscAdjTurbMLSolver::SetAdjoint_Output(CGeometry *geometry,
@@ -608,4 +610,10 @@ su2double CDiscAdjTurbMLSolver::GetTotalFieldSens () {
 
 void CDiscAdjTurbMLSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) {
     ExtractAdjoint_Variables(geometry,config);
+}
+
+void CDiscAdjTurbMLSolver::WriteFieldSensitivityFile() {
+    ofstream fieldSensFile(FieldSensFileName);
+    for (const auto &iSens: Sensitivity_Turb_params)
+        fieldSensFile << iSens << "\n";
 }

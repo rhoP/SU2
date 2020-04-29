@@ -2045,6 +2045,10 @@ void CDiscAdjFluidIteration::Iterate(COutput *output,
   if (turbulent && !frozen_visc) {
 
     solver[iZone][iInst][MESH_0][ADJTURB_SOL]->ExtractAdjoint_Solution(geometry[iZone][iInst][MESH_0], config[iZone]);
+
+    if(config[iZone]->GetKind_Turb_Model() ==8){
+        solver[iZone][iInst][MESH_0][ADJTURB_SOL]->ExtractAdjoint_Variables(geometry[iZone][iInst][MESH_0], config[iZone]);
+    }
   }
   if (heat) {
     solver[iZone][iInst][MESH_0][ADJHEAT_SOL]->ExtractAdjoint_Solution(geometry[iZone][iInst][MESH_0], config[iZone]);
@@ -2136,6 +2140,12 @@ void CDiscAdjFluidIteration::RegisterInput(CSolver *****solver, CGeometry ****ge
 
   }
 
+  /*--- Register the variables of the turbulence modeling problem ---*/
+  if (kind_recording == ML_TURBULENCE_VARIABLES){
+      solver[iZone][iInst][MESH_0][ADJTURB_SOL]->RegisterSolution(geometry[iZone][iInst][MESH_0], config[iZone]);
+
+      solver[iZone][iInst][MESH_0][ADJTURB_SOL]->RegisterVariables(geometry[iZone][iInst][MESH_0], config[iZone]);
+  }
 }
 
 void CDiscAdjFluidIteration::SetRecording(CSolver *****solver,
