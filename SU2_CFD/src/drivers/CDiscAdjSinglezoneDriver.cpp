@@ -541,9 +541,6 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
   } else if(SecondaryVariables == MESH_DEFORM) {
     IDX_SOL = ADJMESH_SOL;
   }
-//  else if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
-//      IDX_SOL = ADJTURB_SOL;
-//  }
   else {
     IDX_SOL = -1;
   }
@@ -551,6 +548,9 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
   if(IDX_SOL >= 0)
     solver[IDX_SOL]->SetSensitivity(geometry, solver, config);
 
+  if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
+      solver[ADJTURB_SOL]->SetParamSensitivity(geometry, config);
+  }
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
 
   AD::ClearAdjoints();

@@ -4656,6 +4656,13 @@ public:
        * \param[out] returns the maximum sensitivity of the ML parameters.
        */
     inline virtual su2double GetTotalFieldSens(){return 0.0;}
+
+    /*!
+   * \brief Sets field parameter sensitivity.
+   * \param[out] returns the sensitivity of the ML parameters.
+   */
+    inline virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config) {};
+
 protected:
   /*!
    * \brief Allocate the memory for the verification solution, if necessary.

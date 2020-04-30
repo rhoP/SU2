@@ -147,6 +147,7 @@ void CAdjTurbOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
 
     SetVolumeOutputValue("ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0));
     SetVolumeOutputValue("RES_ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0) - Node_AdjTurb->GetSolution_Old(iPoint, 0));
+    SetVolumeOutputValue("BETA", iPoint, *(solver[ADJTURB_SOL]->Get_iParamML(iPoint)));
 
     SetVolumeOutputValue("ADJ_BETA", iPoint, solver[ADJTURB_SOL]->GetMLParamSens(iPoint));
 
@@ -170,6 +171,7 @@ void CAdjTurbOutput::SetVolumeOutputFields(CConfig *config){
 
     AddVolumeOutput("ADJ_NU_TILDE", "Adjoint_Nu_Tilde", "SOLUTION", "Adjoint Spalart-Allmaras variable");
     AddVolumeOutput("RES_ADJ_NU_TILDE", "Residual_Adjoint_Nu_Tilde", "RESIDUAL", "Residual of the adjoint Spalart-Allmaras variable");
+    AddVolumeOutput("BETA", "Field_Parameters", "SOLUTION", "field parameter");
 
     AddVolumeOutput("ADJ_BETA", "Field_Sensitivity", "SENSITIVITY", "sensitivity of the field parameter");
 
@@ -192,6 +194,5 @@ bool CAdjTurbOutput::SetUpdate_Averages(CConfig *config){
 
 void CAdjTurbOutput::LoadSurfaceData(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned long iPoint, unsigned short iMarker, unsigned long iVertex){
 
-    SetVolumeOutputValue("SENSITIVITY", iPoint, solver[ADJTURB_SOL]->GetCSensitivity(iMarker, iVertex));
 
 }

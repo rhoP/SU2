@@ -51,7 +51,6 @@
 #include "../../include/solvers/CBaselineSolver_FEM.hpp"
 #include "../../include/solvers/CRadP1Solver.hpp"
 #include "../../include/solvers/CTurbMLSolver.hpp"
-#include "../../include/solvers/CDiscAdjTurbMLSolver.hpp"
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -337,7 +336,7 @@ CSolver* CSolverFactory::createTurbSolver(ENUM_TURB_MODEL kindTurbModel, CSolver
         SU2_MPI::Error("Unknown turbulence model", CURRENT_FUNCTION);
         break;
     }
-  } else if (kindTurbModel != SA_ML){
+  } else {
 
     if (config->GetDiscrete_Adjoint()){
       if (!config->GetFrozen_Visc_Disc())
@@ -346,9 +345,6 @@ CSolver* CSolverFactory::createTurbSolver(ENUM_TURB_MODEL kindTurbModel, CSolver
       if (!config->GetFrozen_Visc_Cont())
         turbSolver = new CAdjTurbSolver(geometry, config, iMGLevel);
     }
-  }
-  else if (config->GetDiscrete_Adjoint()){
-      turbSolver = new CDiscAdjTurbMLSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel);
   }
 
   return turbSolver;

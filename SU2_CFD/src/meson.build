@@ -99,8 +99,7 @@ su2_cfd_src += files(['solvers/CSolverFactory.cpp',
                       'solvers/CTurbSolver.cpp',
                       'solvers/CTurbSASolver.cpp',
                       'solvers/CTurbSSTSolver.cpp',
-		              'solvers/CTurbMLSolver.cpp',
-		              'solvers/CDiscAdjTurbMLSolver.cpp'])
+		              'solvers/CTurbMLSolver.cpp'])
 
 su2_cfd_src += files(['numerics/CNumerics.cpp',
                       'numerics/template.cpp',
