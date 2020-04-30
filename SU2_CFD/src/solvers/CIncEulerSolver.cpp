@@ -3891,7 +3891,6 @@ void CIncEulerSolver::Evaluate_ObjFunc(CConfig *config)  {
     default:
       break;
   }
-cout<< "The value of the Objective Function is "<< Total_ComboObj << endl;
 }
 
 void CIncEulerSolver::SetBeta_Parameter(CGeometry *geometry, CSolver **solver_container,
