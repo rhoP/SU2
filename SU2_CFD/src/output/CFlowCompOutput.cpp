@@ -305,9 +305,13 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("DISSIPATION", "Omega", "SOLUTION", "Rate of dissipation");
     break;
   case SA: case SA_COMP: case SA_E:
-  case SA_E_COMP: case SA_NEG: case SA_ML:
+  case SA_E_COMP: case SA_NEG:
     AddVolumeOutput("NU_TILDE", "Nu_Tilde", "SOLUTION", "Spalart-Allmaras variable");
     break;
+      case SA_ML:
+          AddVolumeOutput("NU_TILDE", "Nu_Tilde", "SOLUTION", "Spalart-Allmaras variable");
+          AddVolumeOutput("FIELD_PARAM", "Field_Param", "SOLUTION", "Field variable for Spalart-Allmaras");
+          break;
   case NONE:
     break;
   }
@@ -450,10 +454,14 @@ void CFlowCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
     SetVolumeOutputValue("DISSIPATION", iPoint, Node_Turb->GetSolution(iPoint, 1));
     break;
   case SA: case SA_COMP: case SA_E:
-  case SA_E_COMP: case SA_NEG: case SA_ML:
+  case SA_E_COMP: case SA_NEG:
     SetVolumeOutputValue("NU_TILDE", iPoint, Node_Turb->GetSolution(iPoint, 0));
     break;
-  case NONE:
+  case SA_ML:
+    SetVolumeOutputValue("NU_TILDE", iPoint, Node_Turb->GetSolution(iPoint, 0));
+    SetVolumeOutputValue("FIELD_PARAM", iPoint, *(geometry->MLParam_Container->Get_iParamML(iPoint)));
+    break;
+      case NONE:
     break;
   }
 

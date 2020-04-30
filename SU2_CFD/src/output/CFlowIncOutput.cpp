@@ -357,9 +357,13 @@ void CFlowIncOutput::SetVolumeOutputFields(CConfig *config){
     AddVolumeOutput("TKE", "Turb_Kin_Energy", "SOLUTION", "Turbulent kinetic energy");
     AddVolumeOutput("DISSIPATION", "Omega", "SOLUTION", "Rate of dissipation");
     break;
-  case SA: case SA_COMP: case SA_E: case SA_ML:
+  case SA: case SA_COMP: case SA_E:
   case SA_E_COMP: case SA_NEG:
     AddVolumeOutput("NU_TILDE", "Nu_Tilde", "SOLUTION", "Spalart–Allmaras variable");
+    break;
+  case SA_ML:
+    AddVolumeOutput("NU_TILDE", "Nu_Tilde", "SOLUTION", "Spalart–Allmaras variable");
+    AddVolumeOutput("FIELD_PARAM", "Field_Param", "SOLUTION", "Field corrrection variable for Spalart–Allmaras");
     break;
   case NONE:
     break;
@@ -504,9 +508,13 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
     SetVolumeOutputValue("TKE", iPoint, Node_Turb->GetSolution(iPoint, 0));
     SetVolumeOutputValue("DISSIPATION", iPoint, Node_Turb->GetSolution(iPoint, 1));
     break;
-  case SA: case SA_COMP: case SA_E: case SA_ML:
+  case SA: case SA_COMP: case SA_E:
   case SA_E_COMP: case SA_NEG:
     SetVolumeOutputValue("NU_TILDE", iPoint, Node_Turb->GetSolution(iPoint, 0));
+    break;
+  case SA_ML:
+    SetVolumeOutputValue("NU_TILDE", iPoint, Node_Turb->GetSolution(iPoint, 0));
+    SetVolumeOutputValue("FIELD_PARAM", iPoint, *(geometry->MLParam_Container->Get_iParamML(iPoint)));
     break;
   case NONE:
     break;
