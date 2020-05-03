@@ -803,6 +803,11 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
     return true;
   }
 
+  if (config->GetKind_Turb_Model() == 8) {
+    ofstream ObjFuncFile(config->GetObjFunc_Value_FileName());
+    ObjFuncFile << solver_container[FLOW_SOL]->GetTotal_ComboObj();
+  }
+  
   return false;
 }
 

@@ -81,10 +81,6 @@ CAdjTurbOutput::CAdjTurbOutput(CConfig *config, unsigned short nDim) : COutput(c
 
     restartFilename = config->GetObjFunc_Extension(restartFilename);
 
-    /*--- Add the field sensitivity output filename ---*/
-
-    fieldSensitivityFileName = config->Get_FieldSensitivity_FileName();
-
     /*--- Set the default convergence field --- */
 
     if (convFields.empty() ) convFields.emplace_back("RMS_ADJ_PRESSURE");

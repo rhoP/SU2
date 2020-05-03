@@ -59,7 +59,9 @@ private:
 
   vector<su2double> Turb_Params;             /*!< \brief Vector with field parameters. */
   vector<su2double> Sensitivity_Turb_params; /*!< \brief Vector with field parameter sensitivities. */
-  string FieldSensFileName;
+  su2double reg_param;
+  string FieldSensFileName,
+         ObjectiveFunctionFileName;
   bool ml;
 
     /*!
@@ -327,5 +329,7 @@ public:
 
     void WriteFieldSensitivityFile();
 
-    virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config) override;
+    virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config,  su2double obj_val) override;
+
+    virtual su2double ValRegularization() override;
 };

@@ -35,7 +35,7 @@
  */
 class CAdjTurbOutput final : public COutput {
 private:
-    string fieldSensitivityFileName; //!< \brief Name of the output file with the field sensitivities
+    string ObjectiveFunctionFileName;
     unsigned long nFieldParams; //!< Number of field parameters
 
 public:

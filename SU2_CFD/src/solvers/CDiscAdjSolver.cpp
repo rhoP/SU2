@@ -133,6 +133,10 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
         }
 
         FieldSensFileName = config->Get_FieldSensitivity_FileName();
+        /*--- Set the objective function value file name ---*/
+        ObjectiveFunctionFileName = config->GetObjFunc_Value_FileName();
+
+        (config->GetValRegularization() !=0.0) ? reg_param = config->GetValRegularization(): reg_param = 0.0;
     }
   /*--- Initialize the discrete adjoint solution to zero everywhere. ---*/
 
@@ -1057,9 +1061,19 @@ void CDiscAdjSolver::WriteFieldSensitivityFile() {
         fieldSensFile << iSens << "\n";
 }
 
-void CDiscAdjSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config){
+void CDiscAdjSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config,  su2double obj_val){
+    ofstream ObjFuncFile(ObjectiveFunctionFileName);
 
+    ObjFuncFile << obj_val << "\n";
 
         WriteFieldSensitivityFile();
 
+}
+
+su2double CDiscAdjSolver::ValRegularization(){
+    su2double temp = 0.0;
+    for (const auto& p_val: Turb_Params){
+        temp += pow(p_val - 1.0, 2);
+    }
+    return reg_param * temp;
 }

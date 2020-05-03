@@ -763,9 +763,7 @@ private:
   SurfAdjCoeff_FileName,         /*!< \brief Output file with the adjoint variables on the surface. */
   New_SU2_FileName,              /*!< \brief Output SU2 mesh file converted from CGNS format. */
   SurfSens_FileName,             /*!< \brief Output file for the sensitivity on the surface (discrete adjoint). */
-  VolSens_FileName,              /*!< \brief Output file for the sensitivity in the volume (discrete adjoint). */
-  MLParam_FileName,              /*!< \brief Input file containing the machine learning parameter values. */
-  Field_Sensitivity_FileName;    /*!< \brief Output file containing the field sensitivities for machine learning of turbulence modeling. */
+  VolSens_FileName;              /*!< \brief Output file for the sensitivity in the volume (discrete adjoint). */
 
   bool Wrt_Output,           /*!< \brief Write any output files */
   Wrt_Vol_Sol,               /*!< \brief Write a volume solution file */
@@ -1143,6 +1141,10 @@ private:
   unsigned short Kind_InletInterpolationFunction; /*!brief type of spanwise interpolation function to use for the inlet face. */
   unsigned short Kind_Inlet_InterpolationType;    /*!brief type of spanwise interpolation data to use for the inlet face. */
   bool PrintInlet_InterpolatedData;               /*!brief option for printing the interpolated data file. */
+
+  string  MLParam_FileName,              /*!< \brief Input file containing the machine learning parameter values. */
+    Field_Sensitivity_FileName;    /*!< \brief Output file containing the field sensitivities for machine learning of turbulence modeling. */
+  su2double ML_regularization;    /*!<\brief Value of the regularization parameter for ML of turbulence modeling*/
 
   /*!
    * \brief Set the default values of config options not set in the config file using another config object.
@@ -5471,14 +5473,15 @@ public:
    * \brief Get name of the file with machine learning parameters.
    * \return File name of the input parameters.
    */
-  string GetMLParam_FileName(void) {return MLParam_FileName;}
+  inline string GetMLParam_FileName(void) {return MLParam_FileName;}
 
     /*!
    * \brief Get name of the field sensitivity output file.
    * \return Name of the output file.
    */
-    string Get_FieldSensitivity_FileName(void) {return Field_Sensitivity_FileName;}
+  inline string Get_FieldSensitivity_FileName(void) {return Field_Sensitivity_FileName;}
 
+  inline su2double GetValRegularization() {return ML_regularization;}
   /*!
    * \brief Append the input filename string with the appropriate objective function extension.
    * \param[in] val_filename - String value of the base filename.

@@ -4661,7 +4661,10 @@ public:
    * \brief Sets field parameter sensitivity.
    * \param[out] returns the sensitivity of the ML parameters.
    */
-    inline virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config) {};
+    inline virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config, su2double obj_val) {};
+
+    inline virtual su2double ValRegularization() {return 0.0;}
+
 
 protected:
   /*!

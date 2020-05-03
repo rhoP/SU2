@@ -13,6 +13,7 @@ install_data(['continuous_adjoint.py',
 	     'discrete_adjoint.py',
 	     'direct_differentiation.py',
 	     'fsi_computation.py',
+	     'field_inversion.py',
 	     'SU2_CFD.py'], 
 	     install_dir: join_paths(get_option('bindir')))
 
