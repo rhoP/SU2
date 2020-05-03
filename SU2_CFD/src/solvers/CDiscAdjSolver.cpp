@@ -409,7 +409,9 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
         for (iPoint = 0; iPoint < nPoint; iPoint++){
             global_index = geometry->node[iPoint]->GetGlobalIndex();
             Turb_Params[global_index] = *geometry->MLParam_Container->Get_iParamML(iPoint);
-            AD::RegisterInput(Turb_Params[global_index]);
+        }
+        for (iPoint = 0; iPoint < nPoint; iPoint++){
+            AD::RegisterInput(Turb_Params[iPoint]);
         }
     }
 }
@@ -652,8 +654,11 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
       if (KindDirect_Solver == RUNTIME_TURB_SYS){
           for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
               global_index = geometry->node[iPoint]->GetGlobalIndex();
-              Sensitivity_Turb_params[global_index] = SU2_TYPE::GetDerivative(Turb_Params[global_index]);
           }
+          for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+              Sensitivity_Turb_params[iPoint] = SU2_TYPE::GetDerivative(Turb_Params[iPoint]);
+          }
+
       }
   }
 }

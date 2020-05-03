@@ -77,7 +77,7 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     else direct_output =  COutputFactory::createOutput(INC_EULER, config, nDim);
     MainVariables = SOLUTION_VARIABLES;
     if (mesh_def) SecondaryVariables = MESH_DEFORM;
-    else if (config->GetKind_Turb_Model() == 8) SecondaryVariables = ML_TURBULENCE_VARIABLES;
+    else if (config->GetKind_Turb_Model() == 8) SecondaryVariables = NONE;
     else          SecondaryVariables = MESH_COORDS;
     break;
 
@@ -490,7 +490,7 @@ void CDiscAdjSinglezoneDriver::Print_DirectResidual(unsigned short kind_recordin
     cout << endl << "Recording the computational graph with respect to the ";
     switch (SecondaryVariables){
       case MESH_COORDS: cout << "mesh coordinates." << endl;    break;
-      case ML_TURBULENCE_VARIABLES: cout << "field parameters for turbulence modeling." << endl; break;
+      //case ML_TURBULENCE_VARIABLES: cout << "field parameters for turbulence modeling." << endl; break;
       default:          cout << "secondary variables." << endl; break;
      }
   }
@@ -551,10 +551,10 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
 
   if(IDX_SOL >= 0)
     solver[IDX_SOL]->SetSensitivity(geometry, solver, config);
-
+/*
   if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
       solver[ADJTURB_SOL]->SetParamSensitivity(geometry, config, ObjFunc);
-  }
+  }*/
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
 
   AD::ClearAdjoints();

@@ -1,4 +1,4 @@
-#!~/anaconda3/envs/pyML/bin/python
+#!/usr/bin/env python 
 
 ## \file field_inversion.py
 #  \brief Python script for field inversion.
@@ -119,15 +119,8 @@ class Project:
 # -------------------------------------------------------------------
 
 def main():
-    # tolerances
-    ftol_u = 1e-5  # during updates
-    ftol_f = 1e-7  # final iteration
-    # the exterior penalty method is used to impose the constraint,
-    # this is the maximum constraint violation, below it the penalty factor is not increased
-    htol = 5e-3
-
     # general options for L-BFGS-B
-    options = {'disp': True, 'maxcor': 10, 'ftol': ftol_u, 'gtol': 1e-18, 'maxiter': 100}
+    options = {'disp': True, 'maxcor': 10, 'ftol': 1e-5, 'gtol': 1e-18, 'maxiter': 100, 'maxls':4}
 
     # these are the commands for the direct and adjoint runs, modify to run parallel
     commands = ["mpirun -np 6 --oversubscribe SU2_CFD ", "SU2_CFD_AD "]
