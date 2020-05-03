@@ -53,6 +53,7 @@ bin_SCRIPTS = \
     discrete_adjoint.py \
     direct_differentiation.py \
     fsi_computation.py \
+    field_inversion.py \
     SU2_CFD.py
 
 

@@ -805,7 +805,8 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
 
   if (config->GetKind_Turb_Model() == 8) {
     ofstream ObjFuncFile(config->GetObjFunc_Value_FileName());
-    ObjFuncFile << solver_container[FLOW_SOL]->GetTotal_ComboObj();
+      if(not config->GetDiscrete_Adjoint())
+        ObjFuncFile << 0.5 * pow(solver_container[FLOW_SOL]->GetTotal_CL() - 1.074902, 2);
   }
   
   return false;

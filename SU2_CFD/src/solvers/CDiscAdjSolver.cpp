@@ -1062,9 +1062,9 @@ void CDiscAdjSolver::WriteFieldSensitivityFile() {
 }
 
 void CDiscAdjSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config,  su2double obj_val){
-    ofstream ObjFuncFile(ObjectiveFunctionFileName);
+//    ofstream ObjFuncFile(ObjectiveFunctionFileName);
 
-    ObjFuncFile << obj_val << "\n";
+//    ObjFuncFile << obj_val << "\n";
 
         WriteFieldSensitivityFile();
 
