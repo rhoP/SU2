@@ -53,7 +53,6 @@ CTurbML::CTurbML(CConfig  *val_config, unsigned short val_iZone,
     /* Store the mesh filename since we will open/close multiple times. */
 
     MLParam_Filename = config->GetMLParam_FileName();
-
     /* Read the basic metadata and perform some basic error checks. */
 
     ReadMetadata();
@@ -90,10 +89,9 @@ void CTurbML::ReadMetadata() {
             if (position != string::npos) {
                 text_line.erase (0,6);
                 numberOfMLParameters = atoi(text_line.c_str());
-                numberOfGlobalPoints =  numberOfMLParameters;
                 for (unsigned long iPara = 0; iPara < numberOfMLParameters; iPara++)
                     getline (MLParam_file, text_line);
-                    foundNPARA = true;
+                foundNPARA = true;
             }
         }
 
@@ -108,19 +106,9 @@ void CTurbML::ReadMetadata() {
 
 void CTurbML::ReadParameterValues() {
 
-    /* Get a partitioner to help with linear partitioning. */
-    CLinearPartitioner pointPartitioner(numberOfGlobalPoints,0);
-
-    /* Determine number of local points */
-    for (unsigned long globalIndex=0; globalIndex < numberOfGlobalPoints; globalIndex++) {
-        if ((int)pointPartitioner.GetRankContainingIndex(globalIndex) == rank) {
-            numberOfLocalPoints++;
-        }
-    }
-
 
     /*--- Reserve memory for the vector of parameters ---*/
-    ML_Parameters.reserve(numberOfLocalPoints);
+    ML_Parameters.reserve(numberOfMLParameters);
     MLParam_file.open(MLParam_Filename.c_str(), ios::in);
 
     /*--- Read the parameters into our data structure. ---*/
@@ -134,20 +122,18 @@ void CTurbML::ReadParameterValues() {
         if (position != string::npos) {
 
             unsigned long GlobalIndex = 0;
-            while (GlobalIndex < numberOfGlobalPoints) {
+            while (GlobalIndex < numberOfMLParameters) {
 
                 getline(MLParam_file, text_line);
 
                 /*--- We only read information for this node if it is owned by this
                  rank based upon our initial linear partitioning. ---*/
 
-                if ((int)pointPartitioner.GetRankContainingIndex(GlobalIndex) == rank) {
                     double par_val{0.0};
                     istringstream par_line(text_line);
                     par_line >> par_val;
                     ML_Parameters.emplace_back(par_val);
 
-                    }
                 GlobalIndex++;
             }
         }

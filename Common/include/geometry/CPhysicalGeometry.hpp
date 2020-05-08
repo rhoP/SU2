@@ -399,13 +399,6 @@ public:
   void SetRCM_Ordering(CConfig *config) override;
 
   /*!
-   * \brief Overload: Orders the RCM along with turbulence parameters.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] param_container - container with machine learning parameters.
-   */
-  void SetRCM_Ordering(CConfig *config, CTurbML *&param_container) override;
-
-  /*!
    * \brief Set elements which surround an element.
    */
   void SetElement_Connectivity(void) override;

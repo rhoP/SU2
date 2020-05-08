@@ -35,7 +35,6 @@
  */
 class CAdjTurbOutput final : public COutput {
 private:
-    string ObjectiveFunctionFileName;
     unsigned long nFieldParams; //!< Number of field parameters
 
 public:

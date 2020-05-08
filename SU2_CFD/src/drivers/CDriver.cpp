@@ -320,7 +320,6 @@ void CDriver::SetContainers_Null(){
   interface_container            = NULL;
   interface_types                = NULL;
   nInst                          = NULL;
-  MLParams                       = nullptr;
 
   /*--- Definition and of the containers for all possible zones. ---*/
 
@@ -533,10 +532,6 @@ void CDriver::Postprocessing() {
 
   if (rank == MASTER_NODE) cout << "Deleted COutput class." << endl;
 
-  if(MLParams != nullptr and rank == MASTER_NODE){
-      delete MLParams;
-      cout << "Deleted machine learning parameter container" << endl;
-  }
 
 
 
@@ -741,6 +736,14 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
 
   }
 
+    /*--- Load the machine learning parameter file for the turbulence modeling problem---*/
+    if(config->GetKind_Turb_Model()==8){
+        geometry[MESH_0]->MLParams = new CTurbML(config, config->GetiZone(), config->GetnZone());
+        if (rank == MASTER_NODE)
+            cout << geometry[MESH_0]->MLParams->Get_nParamML() << " Field parameters found for turbulence modeling." << endl;
+
+    }
+
 }
 
 void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geometry) {
@@ -795,28 +798,12 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
   if (rank == MASTER_NODE) cout << "Setting point connectivity." << endl;
   geometry[MESH_0]->SetPoint_Connectivity();
 
-  /*--- Load the machine learning parameter file for the turbulence modeling problem---*/
-  if(config->GetKind_Turb_Model()==8){
-      MLParams = new CTurbML(config, config->GetiZone(), config->GetnZone());
-      if (rank == MASTER_NODE)
-          cout << MLParams->Get_nParamML() << " Machine learning parameters found." << endl;
-
-  }
-
   /*--- Renumbering points using Reverse Cuthill McKee ordering ---*/
 
   if (rank == MASTER_NODE) cout << "Renumbering points (Reverse Cuthill McKee Ordering)." << endl;
-  if(config->GetKind_Turb_Model()==8){
-      /*--- Storing the resultant vector of RCM ordering for machine learning parameters---*/
-      geometry[MESH_0]->SetRCM_Ordering(config, MLParams);
-  }
-  else
-      geometry[MESH_0]->SetRCM_Ordering(config);
+  geometry[MESH_0]->SetRCM_Ordering(config);
 
 
-  /*--- Assigning the machine learning parameters to a pointer in geometry ---*/
-
-  geometry[MESH_0]->MLParam_Container = MLParams;
 
   /*--- recompute elements surrounding points, points surrounding points ---*/
 

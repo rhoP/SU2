@@ -40,7 +40,6 @@ CAdjTurbOutput::CAdjTurbOutput(CConfig *config, unsigned short nDim) : COutput(c
         requestedHistoryFields.emplace_back("ITER");
         requestedHistoryFields.emplace_back("RMS_RES");
         requestedHistoryFields.emplace_back("SENSITIVITY");
-        requestedHistoryFields.emplace_back("OBJ_FUNC");
         nRequestedHistoryFields = requestedHistoryFields.size();
     }
 
@@ -50,7 +49,6 @@ CAdjTurbOutput::CAdjTurbOutput(CConfig *config, unsigned short nDim) : COutput(c
         requestedScreenFields.emplace_back("RMS_ADJ_PRESSURE");
         requestedScreenFields.emplace_back("RMS_ADJ_NU_TILDE");
         requestedScreenFields.emplace_back("SENS_FIELD");
-        requestedHistoryFields.emplace_back("OBJ_FUNC");
         nRequestedScreenFields = requestedScreenFields.size();
     }
 
@@ -106,9 +104,6 @@ void CAdjTurbOutput::SetHistoryOutputFields(CConfig *config){
     //Sensitivities
     AddHistoryOutput("SENS_FIELD", "Sens[Beta]", ScreenOutputFormat::SCIENTIFIC, "SENSITIVITY", "Total Sensitivity of the field parameters.", HistoryFieldType::COEFFICIENT);
 
-    //Objective Function
-    AddHistoryOutput("OBJ_FUNC", "ObjFun", ScreenOutputFormat::SCIENTIFIC, "OBJ_FUNC", "", HistoryFieldType::COEFFICIENT);
-
 }
 
 inline void CAdjTurbOutput::LoadHistoryData(CConfig *config, CGeometry *geometry, CSolver **solver) {
@@ -120,8 +115,6 @@ inline void CAdjTurbOutput::LoadHistoryData(CConfig *config, CGeometry *geometry
     SetHistoryOutputValue("MAX_ADJ_PRESSURE", log10(solver[ADJFLOW_SOL]->GetRes_Max(0)));
 
     SetHistoryOutputValue("SENS_FIELD", (solver[ADJTURB_SOL]->GetTotalFieldSens()));
-
-    SetHistoryOutputValue("OBJ_FUNC", solver[FLOW_SOL]->GetTotal_ComboObj());
 
 }
 

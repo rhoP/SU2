@@ -394,6 +394,7 @@ void CDiscAdjSinglezoneDriver::SetObjFunction(){
   }
 
   if (config->GetKind_Turb_Model() == 8){
+      //ObjFunc+= 0.5 * pow((Total_CL - 1.074902), 2);
       ObjFunc += solver[ADJTURB_SOL]->ValRegularization();
   }
 
@@ -551,10 +552,10 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
 
   if(IDX_SOL >= 0)
     solver[IDX_SOL]->SetSensitivity(geometry, solver, config);
-/*
-  if (SecondaryVariables == ML_TURBULENCE_VARIABLES){
+
+  if (config->GetKind_Turb_Model() == 8){
       solver[ADJTURB_SOL]->SetParamSensitivity(geometry, config, ObjFunc);
-  }*/
+  }
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
 
   AD::ClearAdjoints();

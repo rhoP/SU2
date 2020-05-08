@@ -60,8 +60,7 @@ private:
   vector<su2double> Turb_Params;             /*!< \brief Vector with field parameters. */
   vector<su2double> Sensitivity_Turb_params; /*!< \brief Vector with field parameter sensitivities. */
   su2double reg_param;
-  string FieldSensFileName,
-         ObjectiveFunctionFileName;
+  string FieldSensFileName;
   bool ml;
 
     /*!

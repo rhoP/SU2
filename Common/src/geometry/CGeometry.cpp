@@ -264,6 +264,7 @@ CGeometry::~CGeometry(void) {
   if (Local_Marker_PeriodicSend != NULL) delete [] Local_Marker_PeriodicSend;
   if (Local_Marker_PeriodicRecv != NULL) delete [] Local_Marker_PeriodicRecv;
 
+  if(MLParams != nullptr) delete MLParams;
 }
 
 void CGeometry::PreprocessP2PComms(CGeometry *geometry,

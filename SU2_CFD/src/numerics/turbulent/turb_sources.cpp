@@ -1119,8 +1119,8 @@ CSourcePieceWise_TurbSA_ML::CSourcePieceWise_TurbSA_ML(unsigned short val_nDim,
 
 CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config) {
 
-//  AD::StartPreacc();
-//  AD::SetPreaccIn(*ml_param);
+  AD::StartPreacc();
+  AD::SetPreaccIn(*ml_param);
 //  AD::SetPreaccIn(V_i, nDim+6);
 //  AD::SetPreaccIn(Vorticity_i, nDim);
 //  AD::SetPreaccIn(StrainMag_i);
@@ -1264,8 +1264,8 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 
     }
 
-//  AD::SetPreaccOut(Residual);
-//  AD::EndPreacc();
+  AD::SetPreaccOut(Residual);
+  AD::EndPreacc();
 
     return ResidualType<>(&Residual, &Jacobian_i, nullptr);
 

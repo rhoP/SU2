@@ -260,8 +260,8 @@ public:
   vector<su2double> Aspect_Ratio;        /*!< \brief Measure of dual CV aspect ratio (max face area / min face area).  */
   vector<su2double> Volume_Ratio;        /*!< \brief Measure of dual CV volume ratio (max sub-element volume / min sub-element volume). */
 
-    /*--- Data structures for turbulence modeling with machine learning. ---*/
-  CTurbML* MLParam_Container = nullptr;  /*!< \brief Container for machine learning parameters*/
+    /*--- Data structure for turbulence modeling with machine learning. ---*/
+  CTurbML* MLParams = nullptr;                     /*! <\brief Container of machine learning parameters for turbulence modeling*/
 
   /*!
    * \brief Constructor of the class.
@@ -600,14 +600,6 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   inline virtual void SetRCM_Ordering(CConfig *config) {}
-
-  /*!
-   * \brief Overload: Orders the RCM along with turbulence parameters.
-   * \param[in] config - Definition of the particular problem.
-   * \param[in] param_container - container with machine learning parameters.
-
-   */
-  inline virtual void SetRCM_Ordering(CConfig *config, CTurbML *&param_container) {}
 
   /*!
    * \brief Connects elements  .
