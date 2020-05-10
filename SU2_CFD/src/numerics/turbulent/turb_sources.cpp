@@ -1211,10 +1211,10 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
             term_exponential = (term1 + term2);
             gamma_BC = 1.0 - exp(-term_exponential);
 
-            Production = val_param*gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
         }
         else {
-            Production = val_param*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = cb1*Shat*TurbVar_i[0]*Volume;
         }
 
         /*--- Destruction term ---*/
@@ -1228,7 +1228,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 //    Original SA model
 //    Destruction = (cw1*fw-cb1*ft2/k2)*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
 
-        Destruction = cw1*fw*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
+        Destruction = val_param*cw1*fw*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
 
         /*--- Diffusion term ---*/
 
