@@ -84,7 +84,7 @@ public:
      * \param[in] par_index - Index of point.
      * \return Value of the machine learning parameter.
      */
-    su2double* Get_iParamML(unsigned long par_index) {return &ML_Parameters[par_index]; }
+    su2double Get_iParamML(unsigned long par_index) {return ML_Parameters[par_index]; }
     /*!
      * \brief Set the machine learning parameter.
      * \param[in] par_index - Index of point.

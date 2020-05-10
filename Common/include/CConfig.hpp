@@ -1142,9 +1142,10 @@ private:
   unsigned short Kind_Inlet_InterpolationType;    /*!brief type of spanwise interpolation data to use for the inlet face. */
   bool PrintInlet_InterpolatedData;               /*!brief option for printing the interpolated data file. */
 
-  string  MLParam_FileName,              /*!< \brief Input file containing the machine learning parameter values. */
-    Field_Sensitivity_FileName;    /*!< \brief Output file containing the field sensitivities for machine learning of turbulence modeling. */
-  su2double ML_regularization;    /*!<\brief Value of the regularization parameter for ML of turbulence modeling*/
+  string  MLParam_FileName,                   /*!< \brief Input file containing the machine learning parameter values. */
+    Field_Sensitivity_FileName;               /*!< \brief Output file containing the field sensitivities for machine learning of turbulence modeling. */
+  su2double ML_regularization;                /*!<\brief Value of the regularization parameter for ML of turbulence modeling*/
+  unsigned long indexFieldParameter;          /*!<\brief Index of the field parameter wrt which the direct diff is to be run.*/
 
   /*!
    * \brief Set the default values of config options not set in the config file using another config object.
@@ -9412,5 +9413,10 @@ public:
    * \return -1 if (on this mpi rank) the zone defined by config is not part of the interface.
    */
   short FindInterfaceMarker(unsigned short iInterface) const;
+
+    /*!
+   * \brief Get the index of the field parameter for forward differentiation.
+   */
+  unsigned long GetIndexFieldParameter() const {return indexFieldParameter;}
 
 };

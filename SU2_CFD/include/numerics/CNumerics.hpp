@@ -1056,6 +1056,12 @@ public:
    */
   inline virtual ResidualType<> ComputeResidual(const CConfig* config) { return ResidualType<>(nullptr,nullptr,nullptr); }
 
+    /*!
+     * \overload For numerics classes that store the residual/flux and Jacobians internally.
+     * \param[in] config - Definition of the particular problem.
+     * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
+     */
+    inline virtual ResidualType<> ComputeResidual(const CConfig* config, su2double val_param) { return ResidualType<>(nullptr,nullptr,nullptr); }
   /*!
    * \overload
    * \param[out] val_residual_i - Pointer to the total residual at point i.
@@ -1321,7 +1327,7 @@ public:
     /*!
      * \brief Sets the value of the field parameter for turbulence modeling with machine learning
      */
-  inline virtual void SetMLParam (su2double* field_parameter){}
+  inline virtual void SetMLParam (su2double field_parameter){}
 
     /*!
      * \brief Gets the value of the field parameter for turbulence modeling with machine learning

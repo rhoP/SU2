@@ -25,9 +25,8 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <openmpi/ompi/mpi/cxx/constants.h>
 #include "../../include/solvers/CTurbMLSolver.hpp"
-#include "../../include/variables/CTurbSAVariable.hpp"
+#include "../../include/variables/CTurbMLVariable.hpp"
 
 
 
@@ -182,7 +181,7 @@ CTurbSA_MLSolver::CTurbSA_MLSolver(CGeometry *geometry, CConfig *config,
 
     /*--- Initialize the solution to the far-field state everywhere. ---*/
 
-    nodes = new CTurbSAVariable(nu_tilde_Inf, muT_Inf, nPoint, nDim, nVar, config);
+    nodes = new CTurbMLVariable(nu_tilde_Inf, muT_Inf, nPoint, nDim, nVar, config);
     SetBaseClassPointerToNodes();
 
     /*--- MPI solution ---*/
@@ -227,15 +226,27 @@ CTurbSA_MLSolver::CTurbSA_MLSolver(CGeometry *geometry, CConfig *config,
 
     SetImplicitPeriodic(true);
 
-    /* Store the initial CFL number for all grid points. */
+    /* Store the initial CFL number and the field parameter for all grid points. */
 
     const su2double CFL = config->GetCFL(MGLevel);
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
         nodes->SetLocalCFL(iPoint, CFL);
+        auto global_index = geometry->node[iPoint]->GetGlobalIndex();
+        nodes->Set_FieldParam(iPoint, geometry->MLParams->Get_iParamML(global_index));
     }
     Min_CFL_Local = CFL;
     Max_CFL_Local = CFL;
     Avg_CFL_Local = CFL;
+
+    /*--- Set forward mode differentiation variables ---*/
+
+    direct_diff = (config->GetDirectDiff() == 16);
+    if(direct_diff) {
+        indexFieldParameter = config->GetIndexFieldParameter();
+        inputParameterForwardMode = geometry->MLParams->Get_iParamML(indexFieldParameter);
+        SU2_TYPE::SetDerivative(inputParameterForwardMode, 1.0);
+    }
+
 
     /*--- Add the solver name (max 8 characters) ---*/
     SolverName = "SA_ML";
@@ -381,7 +392,6 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
 
     SU2_OMP_FOR_DYN(omp_chunk_size)
 
-    ofstream ProductionFile ("production.dat");
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
         /*--- Conservative variables w/o reconstruction ---*/
@@ -431,9 +441,8 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
 
         /*--- Compute the source term ---*/
         global_index = geometry->node[iPoint]->GetGlobalIndex();
-        if (discrete_adjoint) {
-            numerics->SetMLParam(solver_container[ADJTURB_SOL]->Get_iParamML(global_index));
-            auto residual = numerics->ComputeResidual(config);
+        if (!direct_diff) {
+            auto residual = numerics->ComputeResidual(config, nodes->Get_FieldParam(iPoint));
 
             /*--- Subtract residual and the Jacobian ---*/
 
@@ -442,9 +451,9 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
             Jacobian.SubtractBlock2Diag(iPoint, residual.jacobian_i);
         }
         else {
-            numerics->SetMLParam(geometry->MLParams->Get_iParamML(global_index));
-            auto residual = numerics->ComputeResidual(config);
-            ProductionFile << global_index<< "\t" << numerics->GetProduction() << endl;
+            auto residual = numerics->ComputeResidual(config,
+                                           (global_index == indexFieldParameter)? inputParameterForwardMode
+                                                     : nodes->Get_FieldParam(iPoint));
             /*--- Subtract residual and the Jacobian ---*/
 
             LinSysRes.SubtractBlock(iPoint, residual);
@@ -459,7 +468,6 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
 
 
     }
-    ProductionFile.close();
     if (harmonic_balance) {
 
         SU2_OMP_FOR_STAT(omp_chunk_size)

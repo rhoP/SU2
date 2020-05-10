@@ -2197,7 +2197,16 @@ void CDiscAdjFluidIteration::SetDependencies(CSolver *****solver,
     CGeometry::ComputeWallDistance(config, geometry);
 
   }
-
+  if (kind_recording == SOLUTION_VARIABLES and config[iZone]->GetKind_Turb_Model() == 8){
+        auto adjoint_solver = solver[iZone][iInst][MESH_0][ADJTURB_SOL];
+        auto direct_solver = solver[iZone][iInst][MESH_0][TURB_SOL];
+        unsigned long iPoint, global_index, nPoint;
+        nPoint = geometry[iZone][iInst][MESH_0]->GetnPoint();
+        for (iPoint = 0; iPoint < nPoint; iPoint++){
+            global_index = geometry[iZone][iInst][MESH_0]->node[iPoint]->GetGlobalIndex();
+            direct_solver->GetNodes()->Set_FieldParam(iPoint, adjoint_solver->Get_iParamML(global_index));
+        }
+  }
   /*--- Compute coupling between flow and turbulent equations ---*/
   solver[iZone][iInst][MESH_0][FLOW_SOL]->Preprocessing(geometry[iZone][iInst][MESH_0], solver[iZone][iInst][MESH_0], config[iZone], MESH_0, NO_RK_ITER, RUNTIME_FLOW_SYS, true);
   solver[iZone][iInst][MESH_0][FLOW_SOL]->InitiateComms(geometry[iZone][iInst][MESH_0], config[iZone], SOLUTION);
@@ -2221,6 +2230,7 @@ void CDiscAdjFluidIteration::SetDependencies(CSolver *****solver,
     solver[iZone][iInst][MESH_0][RAD_SOL]->InitiateComms(geometry[iZone][iInst][MESH_0], config[iZone], SOLUTION);
     solver[iZone][iInst][MESH_0][RAD_SOL]->CompleteComms(geometry[iZone][iInst][MESH_0], config[iZone], SOLUTION);
   }
+
 }
 
 void CDiscAdjFluidIteration::RegisterOutput(CSolver *****solver, CGeometry ****geometry, CConfig **config, COutput* output, unsigned short iZone, unsigned short iInst){

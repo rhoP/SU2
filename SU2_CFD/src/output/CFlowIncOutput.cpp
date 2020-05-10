@@ -527,7 +527,7 @@ void CFlowIncOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
     break;
   case SA_ML:
     SetVolumeOutputValue("NU_TILDE", iPoint, Node_Turb->GetSolution(iPoint, 0));
-    SetVolumeOutputValue("FIELD_PARAM", iPoint, *(geometry->MLParams->Get_iParamML(iPoint)));
+    SetVolumeOutputValue("FIELD_PARAM", iPoint, (geometry->MLParams->Get_iParamML(iPoint)));
     break;
   case NONE:
     break;

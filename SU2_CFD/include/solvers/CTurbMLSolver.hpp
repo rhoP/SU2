@@ -36,6 +36,11 @@ class CTurbSA_MLSolver final : public CTurbSolver {
 private:
     su2double nu_tilde_Inf, nu_tilde_Engine, nu_tilde_ActDisk;
 
+    bool direct_diff;
+    unsigned long indexFieldParameter;
+    su2double inputParameterForwardMode;
+
+
     /*!
      * \brief A virtual member.
      * \param[in] solver - Solver container

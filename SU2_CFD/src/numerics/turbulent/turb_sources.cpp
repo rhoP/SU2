@@ -1117,16 +1117,16 @@ CSourcePieceWise_TurbSA_ML::CSourcePieceWise_TurbSA_ML(unsigned short val_nDim,
     transition = (config->GetKind_Trans_Model() == BC);
 }
 
-CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config) {
+CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config, su2double val_param) {
 
   AD::StartPreacc();
-  AD::SetPreaccIn(*ml_param);
-//  AD::SetPreaccIn(V_i, nDim+6);
-//  AD::SetPreaccIn(Vorticity_i, nDim);
-//  AD::SetPreaccIn(StrainMag_i);
-//  AD::SetPreaccIn(TurbVar_i[0]);
-//  AD::SetPreaccIn(TurbVar_Grad_i[0], nDim);
-//  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
+  AD::SetPreaccIn(val_param);
+  AD::SetPreaccIn(V_i, nDim+6);
+  AD::SetPreaccIn(Vorticity_i, nDim);
+  AD::SetPreaccIn(StrainMag_i);
+  AD::SetPreaccIn(TurbVar_i[0]);
+  AD::SetPreaccIn(TurbVar_Grad_i[0], nDim);
+  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
 //  BC Transition Model variables
     su2double vmag, rey, re_theta, re_theta_t, re_v;
@@ -1211,10 +1211,10 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
             term_exponential = (term1 + term2);
             gamma_BC = 1.0 - exp(-term_exponential);
 
-            Production = *ml_param*gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = val_param*gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
         }
         else {
-            Production = *ml_param*cb1*Shat*TurbVar_i[0]*Volume;
+            Production = val_param*cb1*Shat*TurbVar_i[0]*Volume;
         }
 
         /*--- Destruction term ---*/

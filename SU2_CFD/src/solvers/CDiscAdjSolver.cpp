@@ -127,10 +127,17 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
         Turb_Params.reserve(nPoint);
 
 
+        unsigned long global_index;
         for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
             Sensitivity_Turb_params.emplace_back(0.0);
-            Turb_Params.emplace_back( *(geometry->MLParams->Get_iParamML(iPoint)));
+            Turb_Params.emplace_back(0.0);
         }
+
+        for (unsigned long iPoint=0; iPoint < nPoint; iPoint++){
+            global_index = geometry->node[iPoint]->GetGlobalIndex();
+            Turb_Params[global_index] =  (geometry->MLParams->Get_iParamML(iPoint));
+        }
+
         FieldSensFileName = config->Get_FieldSensitivity_FileName();
 
         reg_param = config->GetValRegularization();
@@ -405,6 +412,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
         for (iPoint = 0; iPoint < nPoint; iPoint++){
             AD::RegisterInput(Turb_Params[iPoint]);
         }
+
     }
 }
 

@@ -2806,6 +2806,9 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Size of the edge groups colored for thread parallel edge loops (0 forces the reducer strategy). */
   addUnsignedLongOption("EDGE_COLORING_GROUP_SIZE", edgeColorGroupSize, 512);
 
+  /* DESCRIPTION: Index of the mesh point to find direct derivative for turbulence modeling. */
+  addUnsignedLongOption("INDEX_FIELD_PARAMETER", indexFieldParameter, 0);
+
   /* END_CONFIG_OPTIONS */
 
 }

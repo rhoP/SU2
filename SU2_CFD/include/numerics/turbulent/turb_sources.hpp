@@ -411,7 +411,7 @@ private:
     su2double dr, dg, dfw;
     unsigned short iDim;
     bool transition;
-    su2double* ml_param;
+    su2double ml_param;
 
 public:
     /*!
@@ -427,12 +427,12 @@ public:
      * \param[in] config - Definition of the particular problem.
      * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
      */
-    ResidualType<> ComputeResidual(const CConfig* config) override;
+    ResidualType<> ComputeResidual(const CConfig* config, su2double val_param) override;
 
     /*!
      * \brief Sets the value of the field parameter for turbulence modeling with machine learning
      */
-    void SetMLParam (su2double* field_parameter) override {
+    void SetMLParam (su2double field_parameter) override {
         ml_param = field_parameter;
     }
 
@@ -441,6 +441,6 @@ public:
      * \return The value of the field parameter
      */
     su2double GetMLParam() override{
-        return *ml_param;
+        return ml_param;
     }
 };

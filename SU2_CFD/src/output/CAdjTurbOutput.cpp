@@ -136,7 +136,7 @@ void CAdjTurbOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
 
     SetVolumeOutputValue("ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0));
     SetVolumeOutputValue("RES_ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0) - Node_AdjTurb->GetSolution_Old(iPoint, 0));
-    SetVolumeOutputValue("BETA", iPoint, *(solver[ADJTURB_SOL]->Get_iParamML(iPoint)));
+    SetVolumeOutputValue("BETA", iPoint, (solver[ADJTURB_SOL]->Get_iParamML(iPoint)));
 
     SetVolumeOutputValue("ADJ_BETA", iPoint, solver[ADJTURB_SOL]->GetMLParamSens(iPoint));
 

@@ -805,8 +805,17 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
 
   if (config->GetKind_Turb_Model() == 8) {
     ofstream ObjFuncFile(config->GetObjFunc_Value_FileName());
-      if(not config->GetDiscrete_Adjoint())
-        ObjFuncFile << 0.5 * pow(solver_container[FLOW_SOL]->GetTotal_CL() - 1.074902, 2);
+    su2double ObjFunc = 0.5 * pow(solver_container[FLOW_SOL]->GetTotal_CL() - 1.074902, 2);
+      if(not config->GetDiscrete_Adjoint()) {
+          ((config->GetDirectDiff() != 16) && (ObjFuncFile << ObjFunc << endl));
+          if (config->GetDirectDiff() == 16) {
+              auto index_FieldParam = config->GetIndexFieldParameter();
+              ofstream DirectGradFile("ForwardModeGradient_Point"+to_string(index_FieldParam)+".txt");
+              su2double D_Param = SU2_TYPE::GetDerivative(ObjFunc);
+              DirectGradFile << "Obj_Func_Val\tParam_Index\tDerivative" << endl;
+              DirectGradFile << ObjFunc << "\t" << index_FieldParam << "\t" << D_Param << endl;
+          }
+      }
   }
   
   return false;

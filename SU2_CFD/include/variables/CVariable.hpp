@@ -2769,37 +2769,24 @@ public:
    * \brief Get the machine learning parameter for turbulence modeling
    * \return value of the parameter
    */
-    virtual su2double GetMLParam(){
+    virtual su2double Get_FieldParam(unsigned long iPoint){
         return 0.0;}
     /*!
-     * \brief Set the machine learning parameter.
+     * \brief Set the field parameter.
      * \param[in] par_index - Index of point.
-     * \param[in] val_mlparam - New value of the machine learning parameter.
+     * \param[in] val_param - New value of the field parameter.
      */
-    virtual void SetMLParam(su2double val_mlparam) {
+    virtual void Set_FieldParam(unsigned long iPoint, su2double val_param) {
     }
     /*!
-     * \brief Get the original index.
-     * \param[in] par_index - Index of point.
-     * \return Value of the machine learning parameter.
-     */
-    virtual su2double GetMLIndex() {return 0; }
-    /*!
-     * \brief Set the original index.
-     * \param[in] val_index - New value of the index.
-     */
-    virtual void SetMLIndex(unsigned long val_index) {
-    }
-
-    /*!
-     * \brief Set the sensitivity wrt the ML Parameter at the node
+     * \brief Set the sensitivity wrt the field Parameter at the node
      * \param[in] val - value of the Sensitivity
      */
-    virtual void SetSensitivity_MLParam(su2double val) {}
+    virtual void SetSensitivity_FieldParam(su2double val) {}
 
     /*!
-     * \brief Get the Sensitivity wrt the ML Parameter at the node
+     * \brief Get the Sensitivity wrt the field Parameter at the node
      * \return value of the Sensitivity
      */
-    virtual su2double GetSensitivity_MLParam() {return 0.0;}
+    virtual su2double GetSensitivity_FieldParam() {return 0.0;}
 };

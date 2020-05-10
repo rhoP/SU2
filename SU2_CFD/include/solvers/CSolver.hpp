@@ -4632,7 +4632,7 @@ public:
  * \param[in] point_index: index of the point.
  * \param[out] returns the ML Parameter value of the index.
  */
-    inline virtual su2double* Get_iParamML(unsigned long point_index) {return nullptr;}
+    inline virtual su2double Get_iParamML(unsigned long point_index) {return 0.0;}
 
 
     /*!
