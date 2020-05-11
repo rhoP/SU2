@@ -127,15 +127,9 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
         Turb_Params.reserve(nPoint);
 
 
-        unsigned long global_index;
         for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
             Sensitivity_Turb_params.emplace_back(0.0);
-            Turb_Params.emplace_back(0.0);
-        }
-
-        for (unsigned long iPoint=0; iPoint < nPoint; iPoint++){
-            global_index = geometry->node[iPoint]->GetGlobalIndex();
-            Turb_Params[global_index] =  (geometry->MLParams->Get_iParamML(iPoint));
+            Turb_Params.emplace_back(geometry->MLParams->Get_iParamML(iPoint));
         }
 
         FieldSensFileName = config->Get_FieldSensitivity_FileName();
@@ -406,11 +400,20 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
 
-    if (KindDirect_Solver == RUNTIME_TURB_SYS and ml and !reset){
-        unsigned long iPoint;
-        nPoint   =  geometry->GetnPoint();
-        for (iPoint = 0; iPoint < nPoint; iPoint++){
-            AD::RegisterInput(Turb_Params[iPoint]);
+
+
+    if (KindDirect_Solver == RUNTIME_TURB_SYS and ml){
+        unsigned long iPoint, global_index;
+        nPointDomain   =  geometry->GetnPointDomain();
+
+        for (iPoint=0; iPoint < nPointDomain; iPoint++){
+            global_index = geometry->node[iPoint]->GetGlobalIndex();
+            Turb_Params[global_index] =  geometry->MLParams->Get_iParamML(global_index);
+            if (!reset) {
+                AD::RegisterInput(Turb_Params[global_index]);
+            }
+            direct_solver->GetNodes()->Set_FieldParam(iPoint, Get_iParamML(global_index));
+
         }
 
     }
@@ -643,9 +646,12 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
       if (KindDirect_Solver == RUNTIME_TURB_SYS and ml){
-          nPoint = geometry->GetnPoint();
-          for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
-              Sensitivity_Turb_params[iPoint] = SU2_TYPE::GetDerivative(Turb_Params[iPoint]);
+          nPointDomain = geometry->GetnPointDomain();
+          for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
+              auto global_index = geometry->node[iPoint]->GetGlobalIndex();
+              su2double Local_Param_Sens;
+              Local_Param_Sens = SU2_TYPE::GetDerivative(Turb_Params[global_index]);
+              SU2_MPI::Allreduce(&Local_Param_Sens, &Sensitivity_Turb_params[global_index], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
           }
       }
 }
