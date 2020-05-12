@@ -45,8 +45,6 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
 
   adjoint = true;
 
-  ml = config->GetKind_Turb_Model() ==8;
-
   nVar = direct_solver->GetnVar();
   nDim = geometry->GetnDim();
 
@@ -120,22 +118,6 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
       CSensitivity[iMarker][iVertex] = 0.0;
   }
 
-    /*--- Instantiate the turbulence parameter adjoint variables---*/
-    if (ml) {
-        Sensitivity_Turb_params.reserve(nPoint);
-
-        Turb_Params.reserve(nPoint);
-
-
-        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
-            Sensitivity_Turb_params.emplace_back(0.0);
-            Turb_Params.emplace_back(geometry->MLParams->Get_iParamML(iPoint));
-        }
-
-        FieldSensFileName = config->Get_FieldSensitivity_FileName();
-
-        reg_param = config->GetValRegularization();
-    }
   /*--- Initialize the discrete adjoint solution to zero everywhere. ---*/
 
   nodes = new CDiscAdjVariable(Solution, nPoint, nDim, nVar, config);
@@ -400,23 +382,6 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
 
-
-
-    if (KindDirect_Solver == RUNTIME_TURB_SYS and ml){
-        unsigned long iPoint, global_index;
-        nPointDomain   =  geometry->GetnPointDomain();
-
-        for (iPoint=0; iPoint < nPointDomain; iPoint++){
-            global_index = geometry->node[iPoint]->GetGlobalIndex();
-            Turb_Params[global_index] =  geometry->MLParams->Get_iParamML(global_index);
-            if (!reset) {
-                AD::RegisterInput(Turb_Params[global_index]);
-            }
-            direct_solver->GetNodes()->Set_FieldParam(iPoint, Get_iParamML(global_index));
-
-        }
-
-    }
 }
 
 void CDiscAdjSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
@@ -466,9 +431,6 @@ void CDiscAdjSolver::RegisterObj_Func(CConfig *config) {
     case TOTAL_HEATFLUX:
       ObjFunc_Value = direct_solver->GetTotal_HeatFlux();
       break;
-    case INVERSE_DESIGN_ML:
-        ObjFunc_Value = direct_solver->GetTotal_ComboObj();
-        break;
     }
 
     /*--- Template for new objective functions where TemplateObjFunction()
@@ -644,16 +606,6 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   }
 
-  /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
-      if (KindDirect_Solver == RUNTIME_TURB_SYS and ml){
-          nPointDomain = geometry->GetnPointDomain();
-          for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
-              auto global_index = geometry->node[iPoint]->GetGlobalIndex();
-              su2double Local_Param_Sens;
-              Local_Param_Sens = SU2_TYPE::GetDerivative(Turb_Params[global_index]);
-              SU2_MPI::Allreduce(&Local_Param_Sens, &Sensitivity_Turb_params[global_index], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-          }
-      }
 }
 
 
@@ -1047,28 +999,3 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
 
 }
 
-
-su2double CDiscAdjSolver::GetTotalFieldSens () {
-    return accumulate(Sensitivity_Turb_params.begin(), Sensitivity_Turb_params.end(), decltype(Sensitivity_Turb_params)::value_type(0.0));
-}
-
-
-void CDiscAdjSolver::WriteFieldSensitivityFile() {
-    ofstream fieldSensFile(FieldSensFileName);
-    for (const auto &iSens: Sensitivity_Turb_params)
-        fieldSensFile << iSens << "\n";
-}
-
-void CDiscAdjSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config,  su2double obj_val){
-
-        WriteFieldSensitivityFile();
-
-}
-
-su2double CDiscAdjSolver::ValRegularization(){
-    su2double temp = 0.0;
-    for (const auto& p_val: Turb_Params){
-        temp += pow(p_val - 1.0, 2);
-    }
-    return reg_param * temp;
-}

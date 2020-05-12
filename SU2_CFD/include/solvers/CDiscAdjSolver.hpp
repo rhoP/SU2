@@ -57,11 +57,6 @@ private:
 
   CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
 
-  vector<su2double> Turb_Params;             /*!< \brief Vector with field parameters. */
-  vector<su2double> Sensitivity_Turb_params; /*!< \brief Vector with field parameter sensitivities. */
-  su2double reg_param;
-  string FieldSensFileName;
-  bool ml;
 
     /*!
    * \brief Return nodes to allow CSolver::base_nodes to be set.
@@ -303,32 +298,4 @@ public:
                    int val_iter,
                    bool val_update_geo) override;
 
-
-    /*!
-       * \brief Get parameter sensitivity.
-       * \param[in] point_index: index of the point.
-       * \param[out] returns the sensitivity of the indexed ML parameter.
-       */
-    virtual su2double GetMLParamSens(unsigned long point_index) override {return Sensitivity_Turb_params[point_index];}
-
-    /*!
-   * \brief Get maximum parameter sensitivity.
-   * \param[out] returns the maximum sensitivity of the ML parameters.
-   */
-    virtual su2double GetTotalFieldSens () override;
-
-    /*!
-     * \brief Get Machine Learning Parameter.
-     * \param[in] point_index: index of the point.
-     * \param[out] returns the ML Parameter value of the index.
-     */
-    inline virtual su2double Get_iParamML(unsigned long point_index) override {
-        return Turb_Params[point_index];
-    }
-
-    void WriteFieldSensitivityFile();
-
-    virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config,  su2double obj_val) override;
-
-    virtual su2double ValRegularization() override;
 };
