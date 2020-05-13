@@ -1120,7 +1120,7 @@ CSourcePieceWise_TurbSA_ML::CSourcePieceWise_TurbSA_ML(unsigned short val_nDim,
 CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CConfig* config, su2double val_param) {
 
   AD::StartPreacc();
-  AD::SetPreaccIn(val_param);
+  AD::SetPreaccIn(ml_param);
   AD::SetPreaccIn(V_i, nDim+6);
   AD::SetPreaccIn(Vorticity_i, nDim);
   AD::SetPreaccIn(StrainMag_i);
@@ -1132,7 +1132,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
     su2double vmag, rey, re_theta, re_theta_t, re_v;
     su2double tu , nu_cr, nu_t, nu_BC, chi_1, chi_2, term1, term2, term_exponential;
 
-
+    ml_param = val_param;
 
     if (incompressible) {
         Density_i = V_i[nDim+2];
@@ -1228,7 +1228,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 //    Original SA model
 //    Destruction = (cw1*fw-cb1*ft2/k2)*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
 
-        Destruction = val_param*cw1*fw*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
+        Destruction = cw1*fw*TurbVar_i[0]*TurbVar_i[0]/dist_i_2*Volume;
 
         /*--- Diffusion term ---*/
 
@@ -1238,7 +1238,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 
         CrossProduction = cb2_sigma*norm2_Grad*Volume;
 
-        Residual = Production - Destruction + CrossProduction;
+        Residual = ml_param*Production - Destruction + CrossProduction;
 
         /*--- Implicit part, production term ---*/
 
