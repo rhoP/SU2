@@ -1,7 +1,7 @@
 /*!
- * \file CDiscAdjSolver.hpp
- * \brief Headers of the CDiscAdjSolver class
- * \author T. Albring
+ * \file CDiscAdjTurbSolver.hpp
+ * \brief Headers of the CDiscAdjTurbSolver class
+ * \author R. Pochampalli
  * \version 7.0.4 "Blackbird"
  *
  * SU2 Project Website: https://su2code.github.io
@@ -31,29 +31,15 @@
 #include "../variables/CDiscAdjVariable.hpp"
 
 /*!
- * \class CDiscAdjSolver
- * \brief Main class for defining the discrete adjoint solver.
+ * \class CDiscAdjTurbSolver
+ * \brief The discrete adjoint solver for turbulence modeling problems.
  * \ingroup Discrete_Adjoint
- * \author T. Albring
+ * \author R. Pochampalli
  */
-class CDiscAdjSolver final : public CSolver {
+class CDiscAdjTurbSolver final : public CSolver {
 private:
     unsigned short KindDirect_Solver;
     CSolver *direct_solver;
-    su2double **CSensitivity;      /*!< \brief Shape sensitivity coefficient for each boundary and vertex. */
-    su2double Total_Sens_Mach;     /*!< \brief Total mach sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_AoA;      /*!< \brief Total angle of attack sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_Geo;      /*!< \brief Total shape sensitivity coefficient for all the boundaries. */
-    su2double Total_Sens_Press;    /*!< \brief Total farfield sensitivity to pressure. */
-    su2double Total_Sens_Temp;     /*!< \brief Total farfield sensitivity to temperature. */
-    su2double Total_Sens_BPress;   /*!< \brief Total sensitivity to outlet pressure. */
-    su2double Total_Sens_Density;  /*!< \brief Total sensitivity to initial density (incompressible). */
-    su2double Total_Sens_ModVel;   /*!< \brief Total sensitivity to inlet velocity (incompressible). */
-    su2double ObjFunc_Value;       /*!< \brief Value of the objective function. */
-    su2double Mach, Alpha, Beta, Pressure, Temperature, BPressure, ModVel;
-    su2double TemperatureRad, Total_Sens_Temp_Rad;
-
-    su2double *Solution_Geometry; /*!< \brief Auxiliary vector for the geometry solution (dimension nDim instead of nVar). */
 
     CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
 
@@ -73,14 +59,14 @@ public:
     /*!
      * \brief Constructor of the class.
      */
-    CDiscAdjSolver(void);
+    CDiscAdjTurbSolver() = default;
 
     /*!
      * \overload
      * \param[in] geometry - Geometrical definition of the problem.
      * \param[in] config - Definition of the particular problem.
      */
-    CDiscAdjSolver(CGeometry *geometry, CConfig *config);
+    CDiscAdjTurbSolver(CGeometry *geometry, CConfig *config);
 
     /*!
      * \overload
@@ -90,12 +76,12 @@ public:
      * \param[in] Kind_Solver - The kind of direct solver.
      * \param[in] iMesh - Index of the mesh in multigrid computations.
      */
-    CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver* solver, unsigned short Kind_Solver, unsigned short iMesh);
+    CDiscAdjTurbSolver(CGeometry *geometry, CConfig *config, CSolver* solver, unsigned short Kind_Solver, unsigned short iMesh);
 
     /*!
      * \brief Destructor of the class.
      */
-    ~CDiscAdjSolver(void) override;
+    ~CDiscAdjTurbSolver() override;
 
     /*!
      * \brief Performs the preprocessing of the adjoint AD-based solver.

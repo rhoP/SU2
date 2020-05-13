@@ -1,5 +1,5 @@
 /*!
- * \file CDiscAdjSolver.cpp
+ * \file CDiscAdjTurbSolver.cpp
  * \brief Main subroutines for solving the discrete adjoint problem.
  * \author T. Albring
  * \version 7.0.4 "Blackbird"
@@ -25,18 +25,16 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../include/solvers/CDiscAdjSolver.hpp"
 #include "CDiscAdjTurbSolver.hpp"
 
-CDiscAdjSolver::CDiscAdjSolver(void) : CSolver () {
+
+CDiscAdjTurbSolver::CDiscAdjTurbSolver(CGeometry *geometry, CConfig *config)  : CSolver() {
 
 }
 
-CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config)  : CSolver() {
+CDiscAdjTurbSolver::CDiscAdjTurbSolver(CGeometry *geometry, CConfig *config, CSolver *direct_solver, unsigned short Kind_Solver, unsigned short iMesh)  : CSolver() {
 
-}
-
-CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *direct_solver, unsigned short Kind_Solver, unsigned short iMesh)  : CSolver() {
+    if (KindDirect_Solver != RUNTIME_TURB_SYS) return;
 
     unsigned short iVar, iMarker, iDim;
     unsigned long iVertex;
@@ -46,19 +44,13 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
 
     adjoint = true;
 
-    ml = config->GetKind_Turb_Model() ==8;
-
     nVar = direct_solver->GetnVar();
     nDim = geometry->GetnDim();
 
-    /*--- Initialize arrays to NULL ---*/
-
-    CSensitivity = NULL;
 
     /*-- Store some information about direct solver ---*/
     this->KindDirect_Solver = Kind_Solver;
     this->direct_solver = direct_solver;
-
 
     nMarker      = config->GetnMarker_All();
     nPoint       = geometry->GetnPoint();
@@ -69,9 +61,6 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
     Residual      = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual[iVar]      = 1.0;
     Residual_RMS  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_RMS[iVar]  = 1.0;
     Residual_Max  = new su2double[nVar];         for (iVar = 0; iVar < nVar; iVar++) Residual_Max[iVar]  = 1.0;
-
-    /*--- Define some auxiliary vectors related to the geometry adjoint (nDim) ---*/
-    Solution_Geometry = new su2double[nDim];     for (iDim = 0; iDim < nDim; iDim++) Solution_Geometry[iDim] = 1.0;
 
     /*--- Define some auxiliary vectors related to the residual for problems with a BGS strategy---*/
 
@@ -109,105 +98,46 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
 
     for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = 1e-16;
 
-    /*--- Sensitivity definition and coefficient in all the markers ---*/
-
-    CSensitivity = new su2double* [nMarker];
-
-    for (iMarker = 0; iMarker < nMarker; iMarker++) {
-        unsigned long nVertex = geometry->nVertex[iMarker];
-        CSensitivity[iMarker] = new su2double [nVertex];
-
-        for (iVertex = 0; iVertex < nVertex; iVertex++)
-            CSensitivity[iMarker][iVertex] = 0.0;
-    }
-
     /*--- Instantiate the turbulence parameter adjoint variables---*/
-    if (ml) {
-        Sensitivity_Turb_params.reserve(nPoint);
+    Sensitivity_Turb_params.reserve(nPoint);
 
-        Turb_Params.reserve(nPoint);
+    Turb_Params.reserve(nPoint);
 
 
-        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
-            Sensitivity_Turb_params.emplace_back(0.0);
-            Turb_Params.emplace_back(geometry->MLParams->Get_iParamML(iPoint));
-        }
-
-        FieldSensFileName = config->Get_FieldSensitivity_FileName();
-
-        reg_param = config->GetValRegularization();
+    for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++) {
+        Sensitivity_Turb_params.emplace_back(0.0);
+        Turb_Params.emplace_back(geometry->MLParams->Get_iParamML(iPoint));
     }
-    /*--- Initialize the discrete adjoint solution to zero everywhere. ---*/
+
+    FieldSensFileName = config->Get_FieldSensitivity_FileName();
+
+    reg_param = config->GetValRegularization();
 
     nodes = new CDiscAdjVariable(Solution, nPoint, nDim, nVar, config);
     SetBaseClassPointerToNodes();
 
-    switch(KindDirect_Solver){
-        case RUNTIME_FLOW_SYS:
-            SolverName = "ADJ.FLOW";
-            break;
-        case RUNTIME_HEAT_SYS:
-            SolverName = "ADJ.HEAT";
-            break;
-        case RUNTIME_TURB_SYS:
-            SolverName = "ADJ.TURB";
-            break;
-        case RUNTIME_RADIATION_SYS:
-            SolverName = "ADJ.RAD";
-            break;
-        default:
-            SolverName = "ADJ.SOL";
-            break;
-    }
+
+    SolverName = "ADJ.TURB";
+
 }
 
-CDiscAdjSolver::~CDiscAdjSolver(void) {
+CDiscAdjTurbSolver::~CDiscAdjTurbSolver() {
 
-    unsigned short iMarker;
-
-    if (CSensitivity != NULL) {
-        for (iMarker = 0; iMarker < nMarker; iMarker++) {
-            delete [] CSensitivity[iMarker];
-        }
-        delete [] CSensitivity;
-    }
-
-    if (nodes != nullptr) delete nodes;
+    delete nodes;
 }
 
-void CDiscAdjSolver::SetRecording(CGeometry* geometry, CConfig *config){
+void CDiscAdjTurbSolver::SetRecording(CGeometry* geometry, CConfig *config){
 
-    bool time_n1_needed = config->GetTime_Marching() == DT_STEPPING_2ND;
-    bool time_n_needed = (config->GetTime_Marching() == DT_STEPPING_1ST) || time_n1_needed;
 
-    unsigned long iPoint;
-    unsigned short iVar;
+    unsigned long iPoint, local_index;
 
     /*--- Reset the solution to the initial (converged) solution ---*/
 
     for (iPoint = 0; iPoint < nPoint; iPoint++) {
-        direct_solver->GetNodes()->SetSolution(iPoint, nodes->GetSolution_Direct(iPoint));
+        local_index = geometry->node[iPoint]->GetGlobalIndex();
+        direct_solver->GetNodes()->Set_FieldParam(iPoint, Turb_Params[local_index]);
     }
 
-    if (time_n_needed) {
-        for (iPoint = 0; iPoint < nPoint; iPoint++) {
-            for (iVar = 0; iVar < nVar; iVar++) {
-                AD::ResetInput(direct_solver->GetNodes()->GetSolution_time_n(iPoint)[iVar]);
-            }
-        }
-    }
-    if (time_n1_needed) {
-        for (iPoint = 0; iPoint < nPoint; iPoint++) {
-            for (iVar = 0; iVar < nVar; iVar++) {
-                AD::ResetInput(direct_solver->GetNodes()->GetSolution_time_n1(iPoint)[iVar]);
-            }
-        }
-    }
-
-    /*--- Set the Jacobian to zero since this is not done inside the fluid iteration
-     * when running the discrete adjoint solver. ---*/
-
-    direct_solver->Jacobian.SetValZero();
 
     /*--- Set indices to zero ---*/
 
@@ -215,59 +145,7 @@ void CDiscAdjSolver::SetRecording(CGeometry* geometry, CConfig *config){
 
 }
 
-void CDiscAdjSolver::SetMesh_Recording(CGeometry** geometry, CVolumetricMovement *grid_movement, CConfig *config) {
-
-
-//  bool time_n_needed  = ((config->GetUnsteady_Simulation() == DT_STEPPING_1ST) ||
-//      (config->GetUnsteady_Simulation() == DT_STEPPING_2ND)),
-//  time_n1_needed = config->GetUnsteady_Simulation() == DT_STEPPING_2ND;
-
-//  unsigned long ExtIter = config->GetExtIter();
-
-    unsigned long iPoint;
-    unsigned short iDim;
-
-    /*--- Reset the solution to the initial (converged) position ---*/
-
-    for (iPoint = 0; iPoint < nPoint; iPoint++){
-        for (iDim = 0; iDim < nDim; iDim++){
-            geometry[MESH_0]->node[iPoint]->SetCoord(iDim,nodes->GetGeometry_Direct(iPoint,iDim));
-        }
-    }
-
-    /*--- After moving all nodes, update the dual mesh. Recompute the edges and
-     dual mesh control volumes in the domain and on the boundaries. ---*/
-
-    grid_movement->UpdateDualGrid(geometry[MESH_0], config);
-
-    /*--- After updating the dual mesh, compute the grid velocities (only dynamic problems). ---*/
-//  if (time_n_needed){
-//    geometry[MESH_0]->SetGridVelocity(config, ExtIter);
-//  }
-
-    /*--- Update the multigrid structure after moving the finest grid,
-     including computing the grid velocities on the coarser levels. ---*/
-
-    grid_movement->UpdateMultiGrid(geometry, config);
-
-//  if (time_n_needed){
-//    for (iPoint = 0; iPoint < nPoint; iPoint++){
-//      for (iVar = 0; iVar < nVar; iVar++){
-//        AD::ResetInput(direct_solver->GetNodes()->GetSolution_time_n(iPoint,iVar));
-//      }
-//    }
-//  }
-//  if (time_n1_needed){
-//    for (iPoint = 0; iPoint < nPoint; iPoint++){
-//      for (iVar = 0; iVar < nVar; iVar++){
-//        AD::ResetInput(direct_solver->GetNodes()->GetSolution_time_n1(iPoint,iVar));
-//      }
-//    }
-//  }
-
-}
-
-void CDiscAdjSolver::RegisterSolution(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::RegisterSolution(CGeometry *geometry, CConfig *config) {
 
     bool time_n1_needed = (config->GetTime_Marching() == DT_STEPPING_2ND);
     bool time_n_needed  = (config->GetTime_Marching() == DT_STEPPING_1ST) || time_n1_needed;
@@ -285,7 +163,7 @@ void CDiscAdjSolver::RegisterSolution(CGeometry *geometry, CConfig *config) {
         direct_solver->GetNodes()->RegisterSolution_time_n1();
 }
 
-void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, bool reset) {
+void CDiscAdjTurbSolver::RegisterVariables(CGeometry *geometry, CConfig *config, bool reset) {
 
     /*--- Register farfield values as input ---*/
 
@@ -420,7 +298,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
     }
 }
 
-void CDiscAdjSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
 
     bool input        = false;
     bool push_index   = !config->GetMultizone_Problem();
@@ -430,7 +308,7 @@ void CDiscAdjSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
     direct_solver->GetNodes()->RegisterSolution(input, push_index);
 }
 
-void CDiscAdjSolver::RegisterObj_Func(CConfig *config) {
+void CDiscAdjTurbSolver::RegisterObj_Func(CConfig *config) {
 
     /*--- Here we can add new (scalar) objective functions ---*/
     if (config->GetnObj()==1) {
@@ -491,7 +369,7 @@ void CDiscAdjSolver::RegisterObj_Func(CConfig *config) {
     }
 }
 
-void CDiscAdjSolver::SetAdj_ObjFunc(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::SetAdj_ObjFunc(CGeometry *geometry, CConfig *config) {
 
     bool time_stepping = config->GetTime_Marching() != STEADY;
     unsigned long IterAvg_Obj = config->GetIter_Avg_Objective();
@@ -514,7 +392,7 @@ void CDiscAdjSolver::SetAdj_ObjFunc(CGeometry *geometry, CConfig *config) {
     }
 }
 
-void CDiscAdjSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig *config){
+void CDiscAdjTurbSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig *config){
 
     const bool time_n1_needed = config->GetTime_Marching() == DT_STEPPING_2ND;
     const bool time_n_needed = (config->GetTime_Marching() == DT_STEPPING_1ST) || time_n1_needed;
@@ -588,7 +466,7 @@ void CDiscAdjSolver::ExtractAdjoint_Solution(CGeometry *geometry, CConfig *confi
 
 }
 
-void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *config) {
 
     /*--- Extract the adjoint values of the farfield values ---*/
 
@@ -658,7 +536,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 }
 
 
-void CDiscAdjSolver::ExtractAdjoint_Geometry(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::ExtractAdjoint_Geometry(CGeometry *geometry, CConfig *config) {
 
 //  bool time_n_needed  = ((config->GetUnsteady_Simulation() == DT_STEPPING_1ST) ||
 //      (config->GetUnsteady_Simulation() == DT_STEPPING_2ND));
@@ -733,7 +611,7 @@ void CDiscAdjSolver::ExtractAdjoint_Geometry(CGeometry *geometry, CConfig *confi
 //  SetResidual_RMS(geometry, config);
 }
 
-void CDiscAdjSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *config) {
 
     bool dual_time = (config->GetTime_Marching() == DT_STEPPING_1ST ||
                       config->GetTime_Marching() == DT_STEPPING_2ND);
@@ -759,7 +637,7 @@ void CDiscAdjSolver::SetAdjoint_Output(CGeometry *geometry, CConfig *config) {
     }
 }
 
-void CDiscAdjSolver::SetAdjoint_OutputMesh(CGeometry *geometry, CConfig *config){
+void CDiscAdjTurbSolver::SetAdjoint_OutputMesh(CGeometry *geometry, CConfig *config){
 
 //  bool dual_time = (config->GetUnsteady_Simulation() == DT_STEPPING_1ST ||
 //      config->GetUnsteady_Simulation() == DT_STEPPING_2ND);
@@ -784,7 +662,7 @@ void CDiscAdjSolver::SetAdjoint_OutputMesh(CGeometry *geometry, CConfig *config)
 
 }
 
-void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) {
+void CDiscAdjTurbSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConfig *config) {
 
     unsigned long iPoint;
     unsigned short iDim;
@@ -825,7 +703,7 @@ void CDiscAdjSolver::SetSensitivity(CGeometry *geometry, CSolver **solver, CConf
     SetSurface_Sensitivity(geometry, config);
 }
 
-void CDiscAdjSolver::SetSurface_Sensitivity(CGeometry *geometry, CConfig *config) {
+void CDiscAdjTurbSolver::SetSurface_Sensitivity(CGeometry *geometry, CConfig *config) {
     unsigned short iMarker, iDim, iMarker_Monitoring;
     unsigned long iVertex, iPoint;
     su2double *Normal, Prod, Sens = 0.0, SensDim, Area, Sens_Vertex, *Sens_Geo;
@@ -910,7 +788,7 @@ void CDiscAdjSolver::SetSurface_Sensitivity(CGeometry *geometry, CConfig *config
 
 }
 
-void CDiscAdjSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config_container, unsigned short iMesh, unsigned short iRKStep, unsigned short RunTime_EqSystem, bool Output) {
+void CDiscAdjTurbSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, CConfig *config_container, unsigned short iMesh, unsigned short iRKStep, unsigned short RunTime_EqSystem, bool Output) {
     bool dual_time_1st = (config_container->GetTime_Marching() == DT_STEPPING_1ST);
     bool dual_time_2nd = (config_container->GetTime_Marching() == DT_STEPPING_2ND);
     bool dual_time = (dual_time_1st || dual_time_2nd);
@@ -929,7 +807,7 @@ void CDiscAdjSolver::Preprocessing(CGeometry *geometry, CSolver **solver_contain
     }
 }
 
-void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig *config, int val_iter, bool val_update_geo) {
+void CDiscAdjTurbSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig *config, int val_iter, bool val_update_geo) {
 
     unsigned short iVar, iMesh;
     unsigned long iPoint, index, iChildren, Point_Fine, counter;
@@ -1049,24 +927,24 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
 }
 
 
-su2double CDiscAdjSolver::GetTotalFieldSens () {
+su2double CDiscAdjTurbSolver::GetTotalFieldSens () {
     return accumulate(Sensitivity_Turb_params.begin(), Sensitivity_Turb_params.end(), decltype(Sensitivity_Turb_params)::value_type(0.0));
 }
 
 
-void CDiscAdjSolver::WriteFieldSensitivityFile() {
+void CDiscAdjTurbSolver::WriteFieldSensitivityFile() {
     ofstream fieldSensFile(FieldSensFileName);
     for (const auto &iSens: Sensitivity_Turb_params)
         fieldSensFile << iSens << "\n";
 }
 
-void CDiscAdjSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config,  su2double obj_val){
+void CDiscAdjTurbSolver::SetParamSensitivity(CGeometry *geometry, CConfig *config,  su2double obj_val){
 
     WriteFieldSensitivityFile();
 
 }
 
-su2double CDiscAdjSolver::ValRegularization(){
+su2double CDiscAdjTurbSolver::ValRegularization(){
     su2double temp = 0.0;
     for (const auto& p_val: Turb_Params){
         temp += pow(p_val - 1.0, 2);

@@ -51,6 +51,8 @@
 #include "../../include/solvers/CBaselineSolver_FEM.hpp"
 #include "../../include/solvers/CRadP1Solver.hpp"
 #include "../../include/solvers/CTurbMLSolver.hpp"
+#include "../../include/solvers/CDiscAdjTurbSolver.hpp"
+
 
 map<const CSolver*, SolverMetaData> CSolverFactory::allocatedSolvers;
 
@@ -340,7 +342,8 @@ CSolver* CSolverFactory::createTurbSolver(ENUM_TURB_MODEL kindTurbModel, CSolver
 
     if (config->GetDiscrete_Adjoint()){
       if (!config->GetFrozen_Visc_Disc())
-        turbSolver = new CDiscAdjSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel);
+         (kindTurbModel == SA_ML)? turbSolver = new CDiscAdjTurbSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel):
+                 turbSolver = new CDiscAdjSolver(geometry, config, solver[TURB_SOL], RUNTIME_TURB_SYS, iMGLevel);
     } else {
       if (!config->GetFrozen_Visc_Cont())
         turbSolver = new CAdjTurbSolver(geometry, config, iMGLevel);
