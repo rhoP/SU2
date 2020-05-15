@@ -48,7 +48,6 @@ CAdjTurbOutput::CAdjTurbOutput(CConfig *config, unsigned short nDim) : COutput(c
         requestedScreenFields.emplace_back("INNER_ITER");
         requestedScreenFields.emplace_back("RMS_ADJ_PRESSURE");
         requestedScreenFields.emplace_back("RMS_ADJ_NU_TILDE");
-        requestedScreenFields.emplace_back("SENS_FIELD");
         nRequestedScreenFields = requestedScreenFields.size();
     }
 
@@ -102,7 +101,6 @@ void CAdjTurbOutput::SetHistoryOutputFields(CConfig *config){
     AddHistoryOutput("MAX_ADJ_NU_TILDE", "max[A_nu]", ScreenOutputFormat::FIXED, "MAX_RES", "Maximum residual of the adjoint nu tilde.", HistoryFieldType::RESIDUAL);
 
     //Sensitivities
-    AddHistoryOutput("SENS_FIELD", "Sens[Beta]", ScreenOutputFormat::SCIENTIFIC, "SENSITIVITY", "Total Sensitivity of the field parameters.", HistoryFieldType::COEFFICIENT);
 
 }
 
@@ -114,7 +112,6 @@ inline void CAdjTurbOutput::LoadHistoryData(CConfig *config, CGeometry *geometry
     SetHistoryOutputValue("MAX_ADJ_NU_TILDE", log10(solver[ADJTURB_SOL]->GetRes_Max(0)));
     SetHistoryOutputValue("MAX_ADJ_PRESSURE", log10(solver[ADJFLOW_SOL]->GetRes_Max(0)));
 
-    SetHistoryOutputValue("SENS_FIELD", (solver[ADJTURB_SOL]->GetTotalFieldSens()));
 
 }
 
@@ -124,6 +121,7 @@ void CAdjTurbOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
     CVariable* Node_AdjFlow = solver[ADJFLOW_SOL]->GetNodes();
 
     CPoint*    Node_Geo  = geometry->node[iPoint];
+    unsigned long global_index = geometry->node[iPoint]->GetGlobalIndex();
 
 
     SetVolumeOutputValue("COORD-X", iPoint,  Node_Geo->GetCoord(0));
@@ -136,9 +134,9 @@ void CAdjTurbOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolve
 
     SetVolumeOutputValue("ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0));
     SetVolumeOutputValue("RES_ADJ_NU_TILDE", iPoint, Node_AdjTurb->GetSolution(iPoint, 0) - Node_AdjTurb->GetSolution_Old(iPoint, 0));
-    SetVolumeOutputValue("BETA", iPoint, (solver[ADJTURB_SOL]->Get_iParamML(iPoint)));
+    //SetVolumeOutputValue("BETA", iPoint, (solver[ADJTURB_SOL]->Get_iParamML(global_index)));
 
-    SetVolumeOutputValue("ADJ_BETA", iPoint, solver[ADJTURB_SOL]->GetMLParamSens(iPoint));
+    //SetVolumeOutputValue("ADJ_BETA", iPoint, solver[ADJTURB_SOL]->GetMLParamSens(global_index));
 
 }
 
@@ -160,9 +158,9 @@ void CAdjTurbOutput::SetVolumeOutputFields(CConfig *config){
 
     AddVolumeOutput("ADJ_NU_TILDE", "Adjoint_Nu_Tilde", "SOLUTION", "Adjoint Spalart-Allmaras variable");
     AddVolumeOutput("RES_ADJ_NU_TILDE", "Residual_Adjoint_Nu_Tilde", "RESIDUAL", "Residual of the adjoint Spalart-Allmaras variable");
-    AddVolumeOutput("BETA", "Field_Parameters", "SOLUTION", "field parameter");
+    //AddVolumeOutput("BETA", "Field_Parameters", "SOLUTION", "field parameter");
 
-    AddVolumeOutput("ADJ_BETA", "Field_Sensitivity", "SENSITIVITY", "sensitivity of the field parameter");
+    //AddVolumeOutput("ADJ_BETA", "Field_Sensitivity", "SENSITIVITY", "sensitivity of the field parameter");
 
 }
 

@@ -4663,6 +4663,10 @@ public:
 
     inline virtual su2double ValRegularization() {return 0.0;}
 
+    inline virtual void SetField_Recording(CGeometry *geometry, CConfig *config, bool reset){};
+
+    inline virtual void ExtractAdjoint_Field(CGeometry *geometry, CConfig *config){};
+
 
 protected:
   /*!

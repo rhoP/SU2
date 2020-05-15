@@ -143,11 +143,6 @@ void CTurbML::ReadParameterValues() {
 }
 
 
-void CTurbML::MatchParamsPoints(unsigned long global_points) {
-        if(numberOfMLParameters != global_points){
-                SU2_MPI::Error(string("Mismatch between the number of parameters ") + to_string(numberOfMLParameters) +
-                        string("\n and number of points in the problem ") + to_string(global_points) +
-                                                       string("\nCheck the parameter file."),
-                                                       CURRENT_FUNCTION);
-        }
+bool CTurbML::MatchParamsPoints(unsigned long global_points) const {
+    return numberOfMLParameters == global_points;
 }

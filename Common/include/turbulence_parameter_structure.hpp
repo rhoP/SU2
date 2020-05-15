@@ -107,9 +107,9 @@ public:
 
     /*!
      * \brief Match the number of parameters with the global number of points.
-     * \return global number of points.
+     * \return true if points match global points.
      */
-    void MatchParamsPoints(unsigned long global_points);
+    bool MatchParamsPoints(unsigned long global_points) const;
     /*!
      * \brief Get the ith index from the RCM ordering vector.
      * \return index of original ordering.

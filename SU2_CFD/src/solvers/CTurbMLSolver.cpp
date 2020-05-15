@@ -441,8 +441,10 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
 
         /*--- Compute the source term ---*/
         global_index = geometry->node[iPoint]->GetGlobalIndex();
-        if (!direct_diff) {
-            auto residual = numerics->ComputeResidual(config, nodes->Get_FieldParam(iPoint));
+        if (direct_diff) {
+            auto residual = numerics->ComputeResidual(config,
+                    (global_index == indexFieldParameter)? inputParameterForwardMode
+                    : nodes->Get_FieldParam(iPoint));
 
             /*--- Subtract residual and the Jacobian ---*/
 
@@ -451,9 +453,7 @@ void CTurbSA_MLSolver::Source_Residual(CGeometry *geometry, CSolver **solver_con
             Jacobian.SubtractBlock2Diag(iPoint, residual.jacobian_i);
         }
         else {
-            auto residual = numerics->ComputeResidual(config,
-                                           (global_index == indexFieldParameter)? inputParameterForwardMode
-                                                     : nodes->Get_FieldParam(iPoint));
+            auto residual = numerics->ComputeResidual(config, nodes->Get_FieldParam(iPoint));
             /*--- Subtract residual and the Jacobian ---*/
 
             LinSysRes.SubtractBlock(iPoint, residual);

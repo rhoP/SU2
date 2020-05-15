@@ -326,9 +326,12 @@ public:
         return Turb_Params[point_index];
     }
 
-    void WriteFieldSensitivityFile();
-
     virtual void SetParamSensitivity (CGeometry *geometry, CConfig *config,  su2double obj_val) override;
 
     virtual su2double ValRegularization() override;
+
+    void SetField_Recording(CGeometry *geometry, CConfig *config, bool reset) override;
+
+    void ExtractAdjoint_Field(CGeometry *geometry, CConfig *config) override;
+
 };

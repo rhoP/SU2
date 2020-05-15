@@ -739,9 +739,12 @@ void CDriver::Geometrical_Preprocessing(CConfig* config, CGeometry **&geometry, 
     /*--- Load the machine learning parameter file for the turbulence modeling problem---*/
     if(config->GetKind_Turb_Model()==8){
         geometry[MESH_0]->MLParams = new CTurbML(config, config->GetiZone(), config->GetnZone());
-        if (rank == MASTER_NODE)
+        bool match = geometry[MESH_0]->MLParams->MatchParamsPoints(geometry[MESH_0]->GetGlobal_nPointDomain());
+        if (rank == MASTER_NODE and match)
             cout << geometry[MESH_0]->MLParams->Get_nParamML() << " Field parameters found for turbulence modeling." << endl;
-
+        else if (!match){
+            SU2_MPI::Error("Mismatch in number of field parameters.", CURRENT_FUNCTION);
+        }
     }
 
 }

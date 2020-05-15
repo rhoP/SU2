@@ -1121,12 +1121,12 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA_ML::ComputeResidual(const CCon
 
   AD::StartPreacc();
   AD::SetPreaccIn(ml_param);
-  AD::SetPreaccIn(V_i, nDim+6);
-  AD::SetPreaccIn(Vorticity_i, nDim);
-  AD::SetPreaccIn(StrainMag_i);
-  AD::SetPreaccIn(TurbVar_i[0]);
-  AD::SetPreaccIn(TurbVar_Grad_i[0], nDim);
-  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
+  //AD::SetPreaccIn(V_i, nDim+6);
+  //AD::SetPreaccIn(Vorticity_i, nDim);
+  //AD::SetPreaccIn(StrainMag_i);
+  //AD::SetPreaccIn(TurbVar_i[0]);
+  //AD::SetPreaccIn(TurbVar_Grad_i[0], nDim);
+  //AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
 //  BC Transition Model variables
     su2double vmag, rey, re_theta, re_theta_t, re_v;
