@@ -29,6 +29,8 @@
 #pragma once
 
 #include "CTurbSolver.hpp"
+#include <torch/script.h>
+#include <torch/torch.h>
 
 /*!
  * \class CTurbSASolver
@@ -40,6 +42,11 @@
 class CTurbSASolver final : public CTurbSolver {
 private:
   su2double nu_tilde_Inf, nu_tilde_Engine, nu_tilde_ActDisk;
+
+  su2double field_param_DD;
+
+  torch::jit::script::Module module;
+
 
   /*!
    * \brief A virtual member.
@@ -429,4 +436,9 @@ public:
                      CNumerics *visc_numerics,
                      CConfig *config,
                      unsigned short val_marker) override;
+
+  void ReadFieldParameters(CConfig *config, CGeometry *geometry);
+
+
+  su2double GetFieldRegularization(CConfig *config, CGeometry *geometry) override;
 };

@@ -57,6 +57,10 @@ private:
 
   CDiscAdjVariable* nodes = nullptr;  /*!< \brief The highest level in the variable hierarchy this solver can safely use. */
 
+  vector<su2double> field_params;
+  vector<su2double> field_param_sens;
+  su2double total_sens;
+
   /*!
    * \brief Return nodes to allow CSolver::base_nodes to be set.
    */
@@ -297,4 +301,9 @@ public:
                    int val_iter,
                    bool val_update_geo) override;
 
+  void SetTotal_Sens_Field();
+
+  virtual su2double GetTotal_Sens_Field() override {return total_sens;}
+
+  void PrintParamSensitivities(CConfig *config, CGeometry *geometry) override;
 };

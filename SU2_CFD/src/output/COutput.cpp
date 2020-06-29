@@ -798,6 +798,29 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
     return true;
   }
 
+
+    if(config->GetTurbModeling() || config->GetTurbAugment()){
+        cout.precision(20);
+        if(config->GetDirectDiff() == D_FIELD_TURB) {
+            auto index_FieldParam = config->GetFieldParamIndexDD();
+            ofstream DirectGradFile("ForwardModeGradient_Point" + to_string(index_FieldParam) + ".txt");
+            su2double ObjFunc = 0.5 * pow(solver_container[FLOW_SOL]->GetTotal_CL() - config->GetTarget_CL(), 2);
+            su2double derivativeObj = SU2_TYPE::GetDerivative(ObjFunc);
+            DirectGradFile << "Obj Func \t Derivative\n";
+            DirectGradFile << ObjFunc << "\t" << derivativeObj << endl;
+        }
+        else {
+            string OFFile = (config->GetFiniteDiffMode_Field())?
+                                 ("PertObjFuncFile_"+to_string(config->GetFieldParamIndexDD())+".dat")
+                                                                    : (config->GetObjFunc_Value_FileName());
+            ofstream DirectObjFuncFile(OFFile);
+            su2double ObjFunc = 0.5 * pow(solver_container[FLOW_SOL]->GetTotal_CL() - config->GetTarget_CL(), 2);
+            DirectObjFuncFile << ObjFunc <<"\n";
+        }
+
+    }
+
+
   return false;
 }
 

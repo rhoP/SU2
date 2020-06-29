@@ -1142,6 +1142,18 @@ private:
   unsigned short Kind_Inlet_InterpolationType;    /*!brief type of spanwise interpolation data to use for the inlet face. */
   bool PrintInlet_InterpolatedData;               /*!brief option for printing the interpolated data file. */
 
+  /* Turbulence Modeling Options*/
+  bool TurbModeling;                               /*!brief option for running in turbulence modeling mode. */
+  bool TurbAugment;
+  unsigned long FieldParamIndexDD;
+  string FieldParamFileName;
+  string FieldAdjointFileName;
+  bool FinDiffMode_Field;
+  su2double FinDiff_Field;
+  su2double field_reg_param;
+  bool Field_Regularization;
+
+
   /*!
    * \brief Set the default values of config options not set in the config file using another config object.
    * \param config - Config object to use the default values from.
@@ -9395,5 +9407,44 @@ public:
    * \return -1 if (on this mpi rank) the zone defined by config is not part of the interface.
    */
   short FindInterfaceMarker(unsigned short iInterface) const;
+
+    /*!
+   * \brief Returns true for the inverse design problem for turbulence modeling.
+   */
+  inline bool GetTurbModeling() const{
+      return TurbModeling;
+  }
+
+  inline string GetFieldParamFileName() const {
+      return FieldParamFileName;
+  }
+
+  inline unsigned long GetFieldParamIndexDD() const {
+      return FieldParamIndexDD;
+  }
+
+  inline string GetFieldAdjointFileName() const {
+      return FieldAdjointFileName;
+  }
+
+  inline bool GetFiniteDiffMode_Field() const {
+      return FinDiffMode_Field;
+  }
+
+  inline su2double GetFinDiff_Field() const {
+      return FinDiff_Field;
+  }
+
+  inline bool FieldRegularization() const{
+      return Field_Regularization;
+  }
+
+  inline su2double GetFieldReg_Param() const{
+      return field_reg_param;
+  }
+
+  inline bool GetTurbAugment() const{
+      return TurbAugment;
+  }
 
 };

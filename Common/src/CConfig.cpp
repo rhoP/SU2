@@ -2801,7 +2801,28 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Size of the edge groups colored for thread parallel edge loops (0 forces the reducer strategy). */
   addUnsignedLongOption("EDGE_COLORING_GROUP_SIZE", edgeColorGroupSize, 512);
 
-  /* END_CONFIG_OPTIONS */
+  /*--- options for turbulence modeling ---*/
+
+  /* DESCRIPTION: inverse design of turbulence modeling */
+  addBoolOption("TURB_MODELING", TurbModeling, false);
+  /* DESCRIPTION: index of the field parameter for direct diff of turbulence modeling */
+  addUnsignedLongOption("FIELD_INDEX_DD", FieldParamIndexDD,0);
+  /* DESCRIPTION: file with field parameters for turbulence modeling */
+  addStringOption("FIELD_PARAM_FILE",FieldParamFileName, "ml_param.su2");
+  /* DESCRIPTION: file with field parameters for turbulence modeling */
+  addStringOption("FIELD_ADJOINT_FILE",FieldAdjointFileName, "field_sensitivity.dat");
+
+  addBoolOption("FINITEDIFFMODE_FIELD", FinDiffMode_Field, false);
+
+  addDoubleOption("FINITEDIFF_FIELD", FinDiff_Field, 0.0);
+
+  addDoubleOption("FIELD_REG_PARAM", field_reg_param, 0.0);
+
+  addBoolOption("FIELD_REGULARIZATION", Field_Regularization, true);
+
+  addBoolOption("TURB_AUGMENTATION", TurbAugment, false);
+
+    /* END_CONFIG_OPTIONS */
 
 }
 

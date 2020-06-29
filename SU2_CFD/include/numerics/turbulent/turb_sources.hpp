@@ -132,6 +132,7 @@ private:
   su2double dr, dg, dfw;
   unsigned short iDim;
   bool transition;
+  su2double field_param;
 
 public:
   /*!
@@ -148,6 +149,24 @@ public:
    * \return A lightweight const-view (read-only) of the residual/flux and Jacobians.
    */
   ResidualType<> ComputeResidual(const CConfig* config) override;
+
+  inline virtual su2double GetFieldParam() final {
+      return field_param;
+  }
+
+  inline virtual void SetFieldParam(su2double val_param) final {
+      field_param = val_param;
+  }
+
+    inline virtual su2double Get_Ji() const override {return Ji;}
+
+    inline virtual su2double Get_Omega() const override {return Omega;}
+
+    inline virtual su2double Get_dist_i() const override {return dist_i;}
+
+    inline virtual su2double Get_S() const override {return S;}
+
+    inline virtual su2double Get_Shat() const override {return Shat;}
 
 };
 

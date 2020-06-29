@@ -28,6 +28,7 @@
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/variables/CTurbSAVariable.hpp"
 #include "../../../Common/include/omp_structure.hpp"
+#include <iterator>
 
 
 CTurbSASolver::CTurbSASolver(void) : CTurbSolver() { }
@@ -235,6 +236,23 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
   Max_CFL_Local = CFL;
   Avg_CFL_Local = CFL;
 
+
+  if(config->GetTurbModeling()){
+    ReadFieldParameters(config, geometry);
+    if (rank == MASTER_NODE)
+        cout << "Field parameters have been read from file "<< config->GetFieldParamFileName()<< endl;
+
+  }
+
+  if(config->GetTurbAugment()){
+      try{
+          module = torch::jit::load("./traced_resnet.pt");
+      }
+      catch (const c10::Error& e) {
+            SU2_MPI::Error("Unable to load Machine Learning Model", CURRENT_FUNCTION);
+      }
+  }
+
   /*--- Add the solver name (max 8 characters) ---*/
   SolverName = "SA";
 
@@ -422,8 +440,59 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     /*--- Compute the source term ---*/
+    if(config->GetTurbModeling()){
+          numerics->SetFieldParam(nodes->GetFieldParam(iPoint));
+    }
+
+    su2double velocity_i = sqrt(solver_container[FLOW_SOL]->GetNodes()->GetVelocity2(iPoint));
+    bool bd_lyr =
+              (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf());
+               //&& (numerics->Get_dist_i()<0.1);
+              //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
+
+
+    if(config->GetTurbAugment() && bd_lyr){
+
+        auto options =
+                torch::TensorOptions()
+                        .dtype(torch::kDouble)
+                        .requires_grad(false);
+
+
+
+        std::vector<torch::jit::IValue> inputs;
+        torch::Tensor temp_input = torch::empty({3}, options);
+        temp_input[0] = numerics->Get_Ji();
+        temp_input[1] = numerics->Get_dist_i();
+        temp_input[2] = numerics->Get_Shat();
+        inputs.emplace_back(temp_input);
+        torch::Tensor output = module.forward(inputs).toTensor();
+
+
+
+
+        numerics->SetFieldParam(output.item<double>());
+
+        nodes->SetFieldParam(iPoint, numerics->GetFieldParam());
+    }
+
+
+
 
     auto residual = numerics->ComputeResidual(config);
+
+    nodes->SetProduction(iPoint, numerics->GetProduction());
+
+    nodes->Set_Ji(iPoint, numerics->Get_Ji());
+
+    nodes->Set_Omega(iPoint, numerics->Get_Omega());
+
+    nodes->Set_S(iPoint, numerics->Get_S());
+
+    nodes->Set_Shat(iPoint, numerics->Get_Shat());
+
+    nodes->Set_dist_i(iPoint, numerics->Get_dist_i());
+
 
     /*--- Store the intermittency ---*/
 
@@ -2335,5 +2404,53 @@ void CTurbSASolver::SetUniformInlet(CConfig* config, unsigned short iMarker) {
   for(unsigned long iVertex=0; iVertex < nVertex[iMarker]; iVertex++){
     Inlet_TurbVars[iMarker][iVertex][0] = nu_tilde_Inf;
   }
+
+}
+
+void CTurbSASolver::ReadFieldParameters(CConfig *config, CGeometry *geometry) {
+
+    ifstream FieldFile(config->GetFieldParamFileName());
+    istream_iterator<double> start(FieldFile), end;
+    long local_index;
+    unsigned long globalIndex_D = config->GetFieldParamIndexDD();
+
+
+    vector<su2double> global_field_params(start, end);
+
+    unsigned long global_nPoint = global_field_params.size();
+    if (geometry->GetGlobal_nPointDomain() != global_nPoint){
+        SU2_MPI::Error("Mismatch in number of field parameters.\n Found" + to_string(global_nPoint) +
+        " field parameters against " + to_string(geometry->GetGlobal_nPointDomain()) +" mesh points\n",
+                CURRENT_FUNCTION);
+    }
+    if(config->GetFiniteDiffMode_Field()){
+        global_field_params[globalIndex_D] += config->GetFinDiff_Field();
+    }
+    if (config->GetDirectDiff() == D_FIELD_TURB) {
+        SU2_TYPE::SetDerivative(global_field_params[globalIndex_D], 1.0);
+    }
+    
+
+    for (unsigned long global_index= 0; global_index< global_nPoint; global_index++){
+        local_index = geometry->GetGlobal_to_Local_Point(global_index);
+        if(local_index > -1) {
+            nodes->SetFieldParam(local_index, global_field_params[global_index]);
+        }
+    }
+
+}
+
+
+su2double CTurbSASolver::GetFieldRegularization(CConfig *config, CGeometry *geometry){
+
+    su2double val_reg = 0.0;
+    su2double val_reg_param = config->GetFieldReg_Param();
+
+    for (unsigned long iPoint=0; iPoint < nPoint; iPoint++){
+        val_reg += pow(nodes->GetFieldParam(iPoint) - 1.0, 2);
+    }
+
+    val_reg = pow(val_reg, 0.5);
+    return val_reg_param*val_reg;
 
 }

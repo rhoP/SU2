@@ -1315,6 +1315,22 @@ public:
    */
   static void tql2(su2double **V, su2double *d, su2double *e, unsigned short n);
 
+  inline virtual su2double GetFieldParam() {
+        return 0.0;
+  }
+
+  inline virtual void SetFieldParam(su2double val_param) {
+  };
+
+    inline virtual su2double Get_Ji() const {return 0.0;}
+
+    inline virtual su2double Get_Omega() const {return 0.0;}
+
+    inline virtual su2double Get_dist_i() const {return 0.0;}
+
+    inline virtual su2double Get_S() const {return 0.0;}
+
+    inline virtual su2double Get_Shat() const {return 0.0;}
 };
 
 /*!

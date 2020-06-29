@@ -6602,6 +6602,7 @@ void CEulerSolver::Evaluate_ObjFunc(CConfig *config) {
 
   unsigned short iMarker_Monitoring, Kind_ObjFunc;
   su2double Weight_ObjFunc;
+  su2double Target_CL_Field = config->GetTarget_CL();
 
   Total_ComboObj = 0.0;
 
@@ -6715,6 +6716,10 @@ void CEulerSolver::Evaluate_ObjFunc(CConfig *config) {
       break;
     case TOTAL_AVG_TEMPERATURE:
       Total_ComboObj+=Weight_ObjFunc*config->GetSurface_Temperature(0);
+      break;
+    case INVERSE_DESIGN_FIELD:
+      Total_ComboObj += 0.5*pow(TotalCoeff.CL - Target_CL_Field, 2);
+        // Total_ComboObj += abs(TotalCoeff.CL - Target_CL_Field);
       break;
     case CUSTOM_OBJFUNC:
       Total_ComboObj+=Weight_ObjFunc*Total_Custom_ObjFunc;

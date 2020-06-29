@@ -3,7 +3,7 @@ project('SU2', 'c', 'cpp',
         license: 'LGPL2',
         default_options: ['buildtype=release',
                           'warning_level=0',
-                          'cpp_std=c++11'])
+                          'cpp_std=c++14'])
 
 
 pymod = import('python')
@@ -11,6 +11,9 @@ python = pymod.find_installation()
 
 su2_cpp_args = []
 su2_deps     = [declare_dependency(include_directories: 'externals/CLI11')]
+
+
+
 
 if build_machine.system() == 'windows'
   default_warning_flags = []
@@ -151,6 +154,22 @@ elif get_option('enable-openblas')
 endif
 
 catch2_dep = declare_dependency(include_directories: 'externals/catch2/')
+
+
+#torch_root = '/home/rohit/anaconda3/envs/SU2ML/lib/python3.7/site-packages/torch'
+torch_root = '/home/rohit/libtorch'
+libtorch_deps = declare_dependency(include_directories:
+		[torch_root+'/include',
+		torch_root+'/include/torch/csrc/api/include',
+		torch_root+'/lib'])
+		
+su2_deps += libtorch_deps
+		
+libtorch_link_deps = ['-L'+torch_root+'/lib ', torch_root+'/lib/libtorch.so', torch_root+'/lib/libc10.so']
+		
+#su2_deps += libtorch_deps
+libtorch_cpp_args = '-D_GLIBCXX_USE_CXX11_ABI=0'
+
 
 # compile common library
 subdir('Common/src')

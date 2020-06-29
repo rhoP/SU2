@@ -4629,6 +4629,13 @@ public:
    */
   inline virtual bool GetHasHybridParallel() const { return false; }
 
+
+  virtual su2double GetTotal_Sens_Field()  { return 0.0;}
+
+  virtual void  PrintParamSensitivities(CConfig *config, CGeometry *geometry) {};
+
+  virtual su2double GetFieldRegularization(CConfig *config, CGeometry *geometry) { return 0.0;}
+
 protected:
   /*!
    * \brief Allocate the memory for the verification solution, if necessary.
