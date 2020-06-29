@@ -164,7 +164,12 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
       }
     }
     else {
-      Production = cb1*Shat*TurbVar_i[0]*Volume;
+        if (config->GetTurbModeling()) {
+            Production = field_param * cb1 * Shat * TurbVar_i[0] * Volume;
+        }
+        else{
+            Production =  cb1 * Shat * TurbVar_i[0] * Volume;
+        }
     }
 
     /*--- Destruction term ---*/
