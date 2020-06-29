@@ -43,6 +43,7 @@ protected:
   VectorOfMatrix& Gradient_Reconstruction;  /*!< \brief Reference to the gradient of the primitive variables for MUSCL reconstruction for the convective term */
   VectorOfMatrix Gradient_Aux;              /*!< \brief Auxiliary structure to store a second gradient for reconstruction, if required. */
 
+  VectorType Production;
 public:
   /*!
    * \brief Constructor of the class.
@@ -106,6 +107,11 @@ public:
    * \return Reference to variable reconstruction gradient.
    */
   inline VectorOfMatrix& GetGradient_Reconstruction(void) final { return Gradient_Reconstruction; }
+
+
+  inline su2double GetProduction(unsigned long iPoint) override {return Production(iPoint);}
+
+  inline void SetProduction(unsigned long iPoint, su2double val_prod) override {Production(iPoint) = val_prod;}
 
 };
 

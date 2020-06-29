@@ -121,6 +121,9 @@ protected:
   su2matrix<int> AD_InputIndex;    /*!< \brief Indices of Solution variables in the adjoint vector. */
   su2matrix<int> AD_OutputIndex;   /*!< \brief Indices of Solution variables in the adjoint vector after having been updated. */
 
+  VectorType Field_Param;
+  VectorType Field_Param_Sens;
+
   unsigned long nPoint = 0;  /*!< \brief Number of points in the domain. */
   unsigned long nDim = 0;      /*!< \brief Number of dimension of the problem. */
   unsigned long nVar = 0;        /*!< \brief Number of variables of the problem. */
@@ -2764,5 +2767,47 @@ public:
    * \return value of the source term
    */
   virtual su2double GetSourceTerm_DispAdjoint(unsigned long iPoint, unsigned long iDim) const { return 0.0; }
+
+  su2double GetFieldParam(unsigned long iPoint) {
+        return Field_Param(iPoint);
+  }
+
+  void SetFieldParam(unsigned long iPoint, su2double value_param) {
+        Field_Param(iPoint) = value_param;
+  }
+
+  su2double GetFieldParamSens(unsigned long iPoint) {
+        return Field_Param_Sens(iPoint);
+  }
+
+  void SetFieldParamSens(unsigned long iPoint, su2double value_param) {
+        Field_Param_Sens(iPoint) = value_param;
+  }
+
+  inline virtual su2double GetProduction(unsigned long iPoint)  {return 0.0;}
+
+
+  inline virtual void SetProduction(unsigned long iPoint, su2double val_prod) { };
+
+    inline virtual su2double Get_Ji(unsigned long iPoint) const {return 0.0;}
+
+    inline virtual su2double Get_Omega(unsigned long iPoint) const {return 0.0;}
+
+    inline virtual su2double Get_dist_i(unsigned long iPoint) const {return 0.0;}
+
+    inline virtual su2double Get_S(unsigned long iPoint) const {return 0.0;}
+
+    inline virtual su2double Get_Shat(unsigned long iPoint) const {return 0.0;}
+
+
+    inline virtual void Set_Ji(unsigned long iPoint, su2double val) {};
+
+    inline virtual void Set_Omega(unsigned long iPoint, su2double val) {};
+
+    inline virtual void Set_dist_i(unsigned long iPoint, su2double val) {};
+
+    inline virtual void Set_S(unsigned long iPoint, su2double val) {};
+
+    inline virtual void Set_Shat(unsigned long iPoint, su2double val) {};
 
 };

@@ -325,8 +325,17 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
   AddVolumeOutput("TEMPERATURE", "Temperature",             "PRIMITIVE", "Temperature");
   AddVolumeOutput("MACH",        "Mach",                    "PRIMITIVE", "Mach number");
   AddVolumeOutput("PRESSURE_COEFF", "Pressure_Coefficient", "PRIMITIVE", "Pressure coefficient");
+  if (config->GetTurbModeling() || config->GetTurbAugment()){
+      AddVolumeOutput("FIELD_P",    "Field_Parameter",                "PRIMITIVE", "Field parameter");
+      AddVolumeOutput("TURB_CHI",    "Turb_Var_Chi",                "PRIMITIVE", "SA Variable chi");
+      AddVolumeOutput("TURB_OMEGA",    "Turb_Var_Omega",                "PRIMITIVE", "SA Variable Omega");
+      AddVolumeOutput("TURB_DIST_I",    "Turb_Var_d",                "PRIMITIVE", "SA Variable d");
+      AddVolumeOutput("TURB_S",    "Turb_Var_S",                "PRIMITIVE", "SA Variable S");
+      AddVolumeOutput("TURB_SHAT",    "Turb_Var_Shat",                "PRIMITIVE", "SA variable Shat");
 
-  if (config->GetKind_Solver() == RANS || config->GetKind_Solver() == NAVIER_STOKES){
+  }
+
+    if (config->GetKind_Solver() == RANS || config->GetKind_Solver() == NAVIER_STOKES){
     AddVolumeOutput("LAMINAR_VISCOSITY", "Laminar_Viscosity", "PRIMITIVE", "Laminar viscosity");
 
     AddVolumeOutput("SKIN_FRICTION-X", "Skin_Friction_Coefficient_x", "PRIMITIVE", "x-component of the skin friction vector");
@@ -467,7 +476,14 @@ void CFlowCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
   SetVolumeOutputValue("PRESSURE", iPoint, Node_Flow->GetPressure(iPoint));
   SetVolumeOutputValue("TEMPERATURE", iPoint, Node_Flow->GetTemperature(iPoint));
   SetVolumeOutputValue("MACH", iPoint, sqrt(Node_Flow->GetVelocity2(iPoint))/Node_Flow->GetSoundSpeed(iPoint));
-
+    if (config->GetTurbModeling() || config->GetTurbAugment()) {
+        SetVolumeOutputValue("FIELD_P", iPoint, Node_Turb->GetFieldParam(iPoint));
+        SetVolumeOutputValue("TURB_CHI", iPoint, Node_Turb->Get_Ji(iPoint));
+        SetVolumeOutputValue("TURB_DIST_I", iPoint, Node_Turb->Get_dist_i(iPoint));
+        SetVolumeOutputValue("TURB_OMEGA", iPoint, Node_Turb->Get_Omega(iPoint));
+        SetVolumeOutputValue("TURB_S", iPoint, Node_Turb->Get_S(iPoint));
+        SetVolumeOutputValue("TURB_SHAT", iPoint, Node_Turb->Get_Shat(iPoint));
+    }
   su2double VelMag = 0.0;
   for (unsigned short iDim = 0; iDim < nDim; iDim++){
     VelMag += pow(solver[FLOW_SOL]->GetVelocity_Inf(iDim),2.0);

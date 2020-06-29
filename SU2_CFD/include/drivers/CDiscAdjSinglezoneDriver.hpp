@@ -133,4 +133,6 @@ public:
    */
   inline bool GetTimeConvergence() const override {return false;};
 
+  void SetField_ObjFunc();
+
 };

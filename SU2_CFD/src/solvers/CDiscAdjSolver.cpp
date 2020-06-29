@@ -25,6 +25,7 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../../Common/include/toolboxes/CLinearPartitioner.hpp"
 #include "../../include/solvers/CDiscAdjSolver.hpp"
 
 CDiscAdjSolver::CDiscAdjSolver(void) : CSolver () {
@@ -123,6 +124,16 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
   nodes = new CDiscAdjVariable(Solution, nPoint, nDim, nVar, config);
   SetBaseClassPointerToNodes();
 
+
+  if(config->GetTurbModeling()) {
+      field_params.resize(nPoint, 1.0);
+      field_param_sens.resize(nPoint, 0.0);
+
+
+  }
+
+
+
   switch(KindDirect_Solver){
   case RUNTIME_FLOW_SYS:
     SolverName = "ADJ.FLOW";
@@ -154,6 +165,9 @@ CDiscAdjSolver::~CDiscAdjSolver(void) {
   }
 
   if (nodes != nullptr) delete nodes;
+
+  //delete field_params;
+  //delete field_param_sens;
 }
 
 void CDiscAdjSolver::SetRecording(CGeometry* geometry, CConfig *config){
@@ -381,6 +395,15 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
   /*--- Here it is possible to register other variables as input that influence the flow solution
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
+
+  if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && config->GetTurbModeling()){
+    for(unsigned long iPoint = 0; iPoint< nPoint; iPoint++){
+        field_params[iPoint] =  direct_solver->GetNodes()->GetFieldParam(iPoint);
+        if(!reset)
+            AD::RegisterInput(field_params[iPoint]);
+        direct_solver->GetNodes()->SetFieldParam(iPoint, field_params[iPoint]);
+    }
+  }
 }
 
 void CDiscAdjSolver::RegisterOutput(CGeometry *geometry, CConfig *config) {
@@ -607,6 +630,32 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
 
+    if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && config->GetTurbModeling()){
+
+
+        /*auto numberOfGlobalPoints = geometry->GetGlobal_nPointDomain();
+        unsigned long globalIndex;
+        long localIndex;
+        CLinearPartitioner pointPartitioner(numberOfGlobalPoints,0);
+         */
+
+        for(unsigned long iPoint = 0; iPoint< nPoint; iPoint++){
+
+            field_param_sens[iPoint] = SU2_TYPE::GetDerivative(field_params[iPoint]);
+            nodes->SetFieldParamSens(iPoint, field_param_sens[iPoint]);
+        }
+
+        /*for (unsigned long globalIndexOnRank=0; globalIndexOnRank < numberOfGlobalPoints; globalIndexOnRank++) {
+            globalIndex = globalIndex + pointPartitioner.GetFirstIndexOnRank(SU2_MPI::GetRank());
+            localIndex = geometry->GetGlobal_to_Local_Point(globalIndex);
+            if(localIndex > -1){
+                auto local_sens_iParam = nodes->GetFieldParamSens(localIndex);
+                SU2_MPI::Gather(&local_sens_iParam, 1, MPI_DOUBLE, &field_param_sens[globalIndex],
+                1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            }
+        }*/
+
+    }
 }
 
 
@@ -997,5 +1046,44 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
 
   delete [] Restart_Vars;  Restart_Vars = nullptr;
   delete [] Restart_Data;  Restart_Data = nullptr;
+
+}
+
+void CDiscAdjSolver::SetTotal_Sens_Field() {
+    total_sens = 0.0;
+    if(rank != MASTER_NODE) return;
+    for (auto& sens: field_param_sens)
+        total_sens += sens;
+}
+
+void CDiscAdjSolver::PrintParamSensitivities(CConfig *config, CGeometry *geometry) {
+
+    ofstream fieldSensFile(config->GetFieldAdjointFileName());
+    unsigned long  global_nPointDomain;
+    long localIndex;
+    global_nPointDomain = geometry->GetGlobal_nPointDomain();
+    su2double* AllGradients = nullptr;
+    if (rank==MASTER_NODE){
+        AllGradients = new su2double[global_nPointDomain];
+        for (auto iPoint = 0; iPoint < global_nPointDomain; iPoint++)
+            AllGradients[iPoint] = 0.0;
+    }
+    for (auto iPoint=0; iPoint< nPointDomain; iPoint++){
+        localIndex = geometry->GetGlobal_to_Local_Point(iPoint);
+
+        int tag = 1;
+        if(localIndex > -1){
+            int source = SU2_MPI::GetRank();
+            SU2_MPI::Send(&field_param_sens[localIndex], 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
+            SU2_MPI::Recv(&AllGradients[iPoint], 1, MPI_DOUBLE, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+
+    }
+
+    if(rank == MASTER_NODE){
+        for (auto iPoint = 0; iPoint < global_nPointDomain; iPoint++)
+            fieldSensFile << AllGradients[iPoint] << endl;
+
+    }
 
 }

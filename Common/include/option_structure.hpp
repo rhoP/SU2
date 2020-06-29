@@ -1450,7 +1450,8 @@ enum ENUM_OBJECTIVE {
   REFERENCE_NODE = 61,          /*!< \brief Objective function defined as the difference of a particular node respect to a reference position. */
   VOLUME_FRACTION = 62,         /*!< \brief Volume average physical density, for material-based topology optimization applications. */
   TOPOL_DISCRETENESS = 63,      /*!< \brief Measure of the discreteness of the current topology. */
-  TOPOL_COMPLIANCE = 64         /*!< \brief Measure of the discreteness of the current topology. */
+  TOPOL_COMPLIANCE = 64,         /*!< \brief Measure of the discreteness of the current topology. */
+  INVERSE_DESIGN_FIELD = 65
 };
 static const MapType<string, ENUM_OBJECTIVE> Objective_Map = {
   MakePair("DRAG", DRAG_COEFFICIENT)
@@ -1501,6 +1502,7 @@ static const MapType<string, ENUM_OBJECTIVE> Objective_Map = {
   MakePair("VOLUME_FRACTION", VOLUME_FRACTION)
   MakePair("TOPOL_DISCRETENESS", TOPOL_DISCRETENESS)
   MakePair("TOPOL_COMPLIANCE", TOPOL_COMPLIANCE)
+  MakePair("INVERSE_DESIGN_FIELD", INVERSE_DESIGN_FIELD)
 };
 
 /*!
@@ -1997,7 +1999,8 @@ enum ENUM_DIRECTDIFF_VAR {
   D_POISSON = 12,     /*!< \brief Derivative w.r.t. the Poisson's ratio */
   D_RHO = 13,         /*!< \brief Derivative w.r.t. the solid density (inertial) */
   D_RHO_DL = 14,      /*!< \brief Derivative w.r.t. the density for dead loads */
-  D_EFIELD = 15       /*!< \brief Derivative w.r.t. the electric field */
+  D_EFIELD = 15,       /*!< \brief Derivative w.r.t. the electric field */
+  D_FIELD_TURB = 16
 };
 static const MapType<string, ENUM_DIRECTDIFF_VAR> DirectDiff_Var_Map = {
   MakePair("NONE", NO_DERIVATIVE)
@@ -2016,6 +2019,7 @@ static const MapType<string, ENUM_DIRECTDIFF_VAR> DirectDiff_Var_Map = {
   MakePair("STRUCTURAL_DENSITY", D_RHO)
   MakePair("STRUCTURAL_DEAD_LOAD", D_RHO_DL)
   MakePair("ELECTRIC_FIELD", D_EFIELD)
+  MakePair("FIELD_TURB", D_FIELD_TURB)
 };
 
 
@@ -2023,7 +2027,8 @@ enum ENUM_RECORDING {
   SOLUTION_VARIABLES = 1,
   MESH_COORDS = 2,
   MESH_DEFORM = 3,
-  SOLUTION_AND_MESH = 4
+  SOLUTION_AND_MESH = 4,
+  FIELD_VARIABLES = 5
 };
 
 /*!

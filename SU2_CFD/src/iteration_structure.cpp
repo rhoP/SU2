@@ -2132,6 +2132,9 @@ void CDiscAdjFluidIteration::RegisterInput(CSolver *****solver, CGeometry ****ge
 
   }
 
+  if(kind_recording == FIELD_VARIABLES)
+      solver[iZone][iInst][MESH_0][ADJTURB_SOL]->RegisterVariables(geometry[iZone][iInst][MESH_0], config[iZone]);
+
 }
 
 void CDiscAdjFluidIteration::SetRecording(CSolver *****solver,

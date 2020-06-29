@@ -43,6 +43,8 @@ private:
   VectorType DES_LengthScale;
   VectorType Vortex_Tilting;
 
+  VectorType Ji, Omega, S, Shat, dist_i;
+
 public:
   /*!
    * \brief Constructor of the class.
@@ -117,5 +119,28 @@ public:
    * \return Value of the DES length Scale
    */
   inline su2double GetVortex_Tilting(unsigned long iPoint) const override { return Vortex_Tilting(iPoint); }
+
+
+  inline virtual su2double Get_Ji(unsigned long iPoint) const override {return Ji(iPoint);}
+
+    inline virtual su2double Get_Omega(unsigned long iPoint) const override {return Omega(iPoint);}
+
+    inline virtual su2double Get_dist_i(unsigned long iPoint) const override {return dist_i(iPoint);}
+
+    inline virtual su2double Get_S(unsigned long iPoint) const override {return S(iPoint);}
+
+    inline virtual su2double Get_Shat(unsigned long iPoint) const override {return Shat(iPoint);}
+
+
+    inline virtual void Set_Ji(unsigned long iPoint, su2double val) override { Ji(iPoint) = val;}
+
+    inline virtual void Set_Omega(unsigned long iPoint, su2double val) override { Omega(iPoint) = val;}
+
+    inline virtual void Set_dist_i(unsigned long iPoint, su2double val) override { dist_i(iPoint) = val;}
+
+    inline virtual void Set_S(unsigned long iPoint, su2double val) override { S(iPoint) = val;}
+
+    inline virtual void Set_Shat(unsigned long iPoint, su2double val) override { Shat(iPoint) = val;}
+
 
 };

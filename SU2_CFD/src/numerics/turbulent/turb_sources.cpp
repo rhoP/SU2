@@ -156,7 +156,12 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
       term_exponential = (term1 + term2);
       gamma_BC = 1.0 - exp(-term_exponential);
 
-      Production = gamma_BC*cb1*Shat*TurbVar_i[0]*Volume;
+      if (config->GetTurbModeling()) {
+          Production = field_param * gamma_BC * cb1 * Shat * TurbVar_i[0] * Volume;
+      }
+      else{
+          Production = gamma_BC * cb1 * Shat * TurbVar_i[0] * Volume;
+      }
     }
     else {
       Production = cb1*Shat*TurbVar_i[0]*Volume;

@@ -77,6 +77,7 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     else direct_output =  COutputFactory::createOutput(INC_EULER, config, nDim);
     MainVariables = SOLUTION_VARIABLES;
     if (mesh_def) SecondaryVariables = MESH_DEFORM;
+    else if(config->GetTurbModeling()) SecondaryVariables = FIELD_VARIABLES;
     else          SecondaryVariables = MESH_COORDS;
     break;
 
@@ -218,6 +219,17 @@ void CDiscAdjSinglezoneDriver::Postprocess() {
       break;
   }//switch
 
+    if(config->GetDiscrete_Adjoint()){
+        ofstream fieldresult("field_result.csv");
+        unsigned long globalIndex, nPoint;
+        nPoint = geometry->GetnPoint();
+        for (unsigned long iPoint = 0; iPoint < nPoint; iPoint++){
+            globalIndex = geometry->node[iPoint]->GetGlobalIndex();
+            fieldresult << globalIndex << "\t" <<
+                        solver[ADJTURB_SOL]->GetNodes()->GetSolution(iPoint, 0) <<"\t" <<
+                        solver[TURB_SOL]->GetNodes()->GetProduction(iPoint) << endl;
+        }
+    }
 }
 
 void CDiscAdjSinglezoneDriver::SetRecording(unsigned short kind_recording){
@@ -544,6 +556,12 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
 
   if(IDX_SOL >= 0)
     solver[IDX_SOL]->SetSensitivity(geometry, solver, config);
+
+  if(config->GetTurbModeling()){
+      solver[ADJTURB_SOL]->ExtractAdjoint_Variables(geometry, config);
+      solver[ADJTURB_SOL]->PrintParamSensitivities(config, geometry);
+
+  }
 
   /*--- Clear the stored adjoint information to be ready for a new evaluation. ---*/
 

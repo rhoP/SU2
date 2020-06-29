@@ -63,6 +63,10 @@ CDiscAdjVariable::CDiscAdjVariable(const su2double* sol, unsigned long npoint, u
   if (config->GetMultizone_Problem() && config->GetDiscrete_Adjoint()) {
     External.resize(nPoint,nVar) = su2double(0.0);
   }
+
+    if(config->GetTurbModeling()){
+        Field_Param_Sens.resize(nPoint) = su2double(0.0);
+    }
 }
 
 void CDiscAdjVariable::Set_OldSolution_Geometry() { Solution_Geometry_Old = Solution_Geometry; }
