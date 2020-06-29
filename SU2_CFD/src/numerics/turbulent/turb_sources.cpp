@@ -136,7 +136,7 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
 //    Original SA model
 //    Production = cb1*(1.0-ft2)*Shat*TurbVar_i[0]*Volume;
 
-    if (transition) {
+    if (transition && !config->GetTurbModeling()) {
 
 //    BC model constants
       chi_1 = 0.002;
@@ -156,15 +156,13 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
       term_exponential = (term1 + term2);
       gamma_BC = 1.0 - exp(-term_exponential);
 
-      if (config->GetTurbModeling()) {
-          Production = field_param * gamma_BC * cb1 * Shat * TurbVar_i[0] * Volume;
-      }
-      else{
-          Production = gamma_BC * cb1 * Shat * TurbVar_i[0] * Volume;
-      }
+      Production = gamma_BC * cb1 * Shat * TurbVar_i[0] * Volume;
     }
-    else {
-      Production = cb1*Shat*TurbVar_i[0]*Volume;
+    else if (config->GetTurbModeling()) {
+            Production = field_param  * cb1 * Shat * TurbVar_i[0] * Volume;
+        }
+    else{
+            Production =  cb1 * Shat * TurbVar_i[0] * Volume;
     }
 
     /*--- Destruction term ---*/
@@ -197,8 +195,11 @@ CNumerics::ResidualType<> CSourcePieceWise_TurbSA::ComputeResidual(const CConfig
     if ( Shat <= 1.0e-10 ) dShat = 0.0;
     else dShat = (fv2+TurbVar_i[0]*dfv2)*inv_k2_d2;
 
-    if (transition) {
+    if (transition && !config->GetTurbModeling()) {
       Jacobian_i[0] += gamma_BC*cb1*(TurbVar_i[0]*dShat+Shat)*Volume;
+    }
+    else if (config->GetTurbModeling()){
+        Jacobian_i[0] += field_param*cb1*(TurbVar_i[0]*dShat+Shat)*Volume;
     }
     else {
       Jacobian_i[0] += cb1*(TurbVar_i[0]*dShat+Shat)*Volume;

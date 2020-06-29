@@ -243,7 +243,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
         cout << "Field parameters have been read from file "<< config->GetFieldParamFileName()<< endl;
 
   }
-
+/*
   if(config->GetTurbAugment()){
       try{
           module = torch::jit::load("./traced_resnet.pt");
@@ -252,6 +252,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
             SU2_MPI::Error("Unable to load Machine Learning Model", CURRENT_FUNCTION);
       }
   }
+*/
 
   /*--- Add the solver name (max 8 characters) ---*/
   SolverName = "SA";
@@ -450,7 +451,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
                //&& (numerics->Get_dist_i()<0.1);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
 
-
+/*
     if(config->GetTurbAugment() && bd_lyr){
 
         auto options =
@@ -475,7 +476,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
 
         nodes->SetFieldParam(iPoint, numerics->GetFieldParam());
     }
-
+*/
 
 
 

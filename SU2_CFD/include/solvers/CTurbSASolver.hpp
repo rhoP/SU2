@@ -29,8 +29,8 @@
 #pragma once
 
 #include "CTurbSolver.hpp"
-#include <torch/script.h>
-#include <torch/torch.h>
+//#include <torch/script.h>
+//#include <torch/torch.h>
 
 /*!
  * \class CTurbSASolver
@@ -45,7 +45,7 @@ private:
 
   su2double field_param_DD;
 
-  torch::jit::script::Module module;
+  //torch::jit::script::Module module;
 
 
   /*!
