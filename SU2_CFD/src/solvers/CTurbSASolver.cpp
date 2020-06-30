@@ -445,13 +445,13 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
           numerics->SetFieldParam(nodes->GetFieldParam(iPoint));
     }
 
-    su2double velocity_i = sqrt(solver_container[FLOW_SOL]->GetNodes()->GetVelocity2(iPoint));
+/*    su2double velocity_i = sqrt(solver_container[FLOW_SOL]->GetNodes()->GetVelocity2(iPoint));
     bool bd_lyr =
               (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf());
                //&& (numerics->Get_dist_i()<0.1);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
 
-/*
+
     if(config->GetTurbAugment() && bd_lyr){
 
         auto options =

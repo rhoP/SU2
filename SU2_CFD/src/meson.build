@@ -161,10 +161,7 @@ if get_option('enable-normal')
                        'SU2_CFD.cpp',
                        install : true,
                        dependencies : [su2_cfd_dep, su2_deps, common_dep],
-                       cpp_args:  ['-fPIC'] + [default_warning_flags, su2_cpp_args, libtorch_cpp_args],
-                       override_options : ['cpp_std=c++14'], 
-                       link_args : libtorch_link_deps, 
-                       )
+                       cpp_args:  ['-fPIC'] + [default_warning_flags, su2_cpp_args])
 endif
 
 if get_option('enable-autodiff')
@@ -179,7 +176,7 @@ if get_option('enable-autodiff')
                           'SU2_CFD.cpp',
                           install : true,
                           dependencies : [su2_cfd_dep_ad, su2_deps, codi_dep, commonAD_dep],
-                          cpp_args: ['-fPIC'] + [default_warning_flags, su2_cpp_args, codi_rev_args], override_options : ['cpp_std=c++14'])
+                          cpp_args: ['-fPIC'] + [default_warning_flags, su2_cpp_args, codi_rev_args])
 endif
 
 if get_option('enable-directdiff')
