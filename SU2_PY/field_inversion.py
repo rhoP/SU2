@@ -32,7 +32,7 @@ import subprocess as sp
 import numpy as np
 import scipy.optimize
 from pathlib import Path
-
+from shutil import copyfile
 
 # -------------------------------------------------------------------
 #  Auxiliary functions
@@ -86,14 +86,15 @@ class Project:
         self._res_file = 'restart_flow.dat'
         self._sol_file_adj = 'solution_adj.dat'
         self._res_file_adj = 'restart_adj.dat'
-        self._val_reg_param = 1e-5
+        self._val_reg_param = 0
+        self._niter = 0
 
     # end
 
     def obj_val(self, x, itn):
         obj_fun = 0.0
 
-        if itn['Eval'] % 100 == 0:
+        if itn['Eval'] == 0:
             try:
                 os.remove(self._objValFile)
             except:
@@ -101,16 +102,16 @@ class Project:
             if Path('./' + self._sol_file).is_file():
                 if Path('./' + self._res_file).is_file():
                     Path('./' + self._sol_file).unlink()
-                    os.rename(self._res_file, self._sol_file)
+                    copyfile(self._res_file, self._sol_file)
                 else:
                     print("Running cold: primal solver.")
             else:
                 if Path('./' + self._res_file).is_file():
-                    os.rename(self._res_file, self._sol_file)
+                    copyfile(self._res_file, self._sol_file)
                 else:
                     print("Running cold: primal solver.")
         else:
-            niter = itn['Eval']
+            self._niter = itn['Eval']
             os.rename(self._objValFile, str(niter) + '_' + self._objValFile)
             os.rename(self._sol_file, str(niter) + '_' + self._sol_file)
         try:
@@ -124,6 +125,7 @@ class Project:
             raise RuntimeError("Objective function evaluation failed")
         # end
         obj_fun = ofr[0] + self._val_reg_param * self.regularization(x)
+        self._niter += 1
 
         return obj_fun
 
