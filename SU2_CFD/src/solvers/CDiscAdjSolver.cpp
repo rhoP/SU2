@@ -1058,32 +1058,37 @@ void CDiscAdjSolver::SetTotal_Sens_Field() {
 
 void CDiscAdjSolver::PrintParamSensitivities(CConfig *config, CGeometry *geometry) {
 
-    ofstream fieldSensFile(config->GetFieldAdjointFileName());
     unsigned long  global_nPointDomain;
-    long localIndex;
+    unsigned long globalIndex;
     global_nPointDomain = geometry->GetGlobal_nPointDomain();
-    su2double* AllGradients = nullptr;
-    if (rank==MASTER_NODE){
+    /*su2double* AllGradients = nullptr;
+    if(rank == MASTER_NODE) {
         AllGradients = new su2double[global_nPointDomain];
-        for (auto iPoint = 0; iPoint < global_nPointDomain; iPoint++)
+        for (unsigned long iPoint=0; iPoint< global_nPointDomain; iPoint++){
             AllGradients[iPoint] = 0.0;
-    }
-    for (auto iPoint=0; iPoint< nPointDomain; iPoint++){
-        localIndex = geometry->GetGlobal_to_Local_Point(iPoint);
-
-        int tag = 1;
-        if(localIndex > -1){
-            int source = SU2_MPI::GetRank();
-            SU2_MPI::Send(&field_param_sens[localIndex], 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
-            SU2_MPI::Recv(&AllGradients[iPoint], 1, MPI_DOUBLE, source, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
+    }*/
 
+    //CLinearPartitioner partition(global_nPointDomain,0);
+    //unsigned long first_index = partition.GetFirstIndexOnRank(SU2_MPI::GetRank());
+    vector<su2double> AllGradients;
+    AllGradients.resize(global_nPointDomain, 0.0);
+
+    for (unsigned long iPoint=0; iPoint< nPointDomain; iPoint++){
+        globalIndex = geometry->node[iPoint]->GetGlobalIndex();
+        AllGradients[globalIndex] = field_param_sens[iPoint];
+    }
+    SU2_MPI::Barrier(MPI_COMM_WORLD);
+
+    for (unsigned long iPoint=0; iPoint< global_nPointDomain; iPoint++) {
+        SU2_MPI::Allreduce(&AllGradients[iPoint], &AllGradients[iPoint], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
 
-    if(rank == MASTER_NODE){
-        for (auto iPoint = 0; iPoint < global_nPointDomain; iPoint++)
-            fieldSensFile << AllGradients[iPoint] << endl;
 
+
+   if(rank == MASTER_NODE){
+       ofstream fieldSensFile(config->GetFieldAdjointFileName());
+       for (unsigned long iPoint = 0; iPoint < global_nPointDomain; iPoint++)
+            fieldSensFile <<AllGradients[iPoint]<< "\n";
     }
-
 }

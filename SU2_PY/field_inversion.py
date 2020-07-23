@@ -86,7 +86,7 @@ class Project:
         self._res_file = 'restart_flow.dat'
         self._sol_file_adj = 'solution_adj.dat'
         self._res_file_adj = 'restart_adj.dat'
-        self._val_reg_param = 0
+        self._val_reg_param = 1e-5
         self._niter = 0
 
     # end
