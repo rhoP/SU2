@@ -93,8 +93,8 @@ class Project:
 
     def obj_val(self, x, itn):
         obj_fun = 0.0
-
-        if itn['Eval'] == 0:
+        self._niter = itn['Eval']
+        if self._niter == 0:
             try:
                 os.remove(self._objValFile)
             except:
@@ -103,15 +103,16 @@ class Project:
                 if Path('./' + self._res_file).is_file():
                     Path('./' + self._sol_file).unlink()
                     copyfile(self._res_file, self._sol_file)
+                    print("Running a restart.")
                 else:
                     print("Running cold: primal solver.")
             else:
                 if Path('./' + self._res_file).is_file():
                     copyfile(self._res_file, self._sol_file)
+                    print("Running a restart.")
                 else:
                     print("Running cold: primal solver.")
         else:
-            self._niter = itn['Eval']
             os.rename(self._objValFile, str(niter) + '_' + self._objValFile)
             os.rename(self._sol_file, str(niter) + '_' + self._sol_file)
         try:
@@ -220,7 +221,7 @@ def main():
     options = {'disp': True, 'maxcor': 10, 'ftol': 1e-16, 'gtol': 1e-16, 'maxiter': 100, 'maxls': 20}
 
     # these are the commands for the direct and adjoint runs, modify to run parallel
-    commands = ["mpirun -np 6 --oversubscribe SU2_CFD ", "SU2_CFD_AD "]
+    commands = ["mpirun SU2_CFD ", "mpirun SU2_CFD_AD "]
 
     # file through which SU2 gets the parameter values
     inputFile = "ml_param.su2"
