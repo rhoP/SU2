@@ -1061,16 +1061,6 @@ void CDiscAdjSolver::PrintParamSensitivities(CConfig *config, CGeometry *geometr
     unsigned long  global_nPointDomain;
     unsigned long globalIndex;
     global_nPointDomain = geometry->GetGlobal_nPointDomain();
-    /*su2double* AllGradients = nullptr;
-    if(rank == MASTER_NODE) {
-        AllGradients = new su2double[global_nPointDomain];
-        for (unsigned long iPoint=0; iPoint< global_nPointDomain; iPoint++){
-            AllGradients[iPoint] = 0.0;
-        }
-    }*/
-
-    //CLinearPartitioner partition(global_nPointDomain,0);
-    //unsigned long first_index = partition.GetFirstIndexOnRank(SU2_MPI::GetRank());
     vector<su2double> AllGradients;
     AllGradients.resize(global_nPointDomain, 0.0);
 
