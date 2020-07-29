@@ -133,32 +133,24 @@ class Project:
     #: Obj_val()
 
     def obj_der(self, x, itn):
-        if itn['Eval'] % 100 == 0:
-            try:
-                os.remove(self._objDerFile)
-            except:
-                pass
-            if Path('./' + self._sol_file_adj).is_file():
-                if Path('./' + self._res_file_adj).is_file():
-                    Path('./' + self._sol_file_adj).unlink()
-                    os.rename(self._res_file_adj, self._sol_file_adj)
-                else:
-                    print("Running cold: adjoint solver.")
-            if Path('./' + self._sol_file).is_file():
-                if Path('./' + self._res_file).is_file():
-                    Path('./' + self._sol_file).unlink()
-                    os.rename(self._res_file, self._sol_file)
-                else:
-                    print("Solution file not found.")
+        try:
+            os.remove(self._objDerFile)
+        except:
+            pass
+        if Path('./' + self._sol_file).is_file():
+            if Path('./' + self._res_file).is_file():
+                Path('./' + self._sol_file).unlink()
+                os.rename(self._res_file, self._sol_file)
             else:
-                if Path('./' + self._res_file_adj).is_file():
-                    os.rename(self._res_file_adj, self._sol_file_adj)
-                else:
-                    print("Running cold: adjoint solver.")
+                print("Solution file not found.")
         else:
-            niter = itn['Eval']
-            os.rename(self._objDerFile, str(niter) + '_' + self._objDerFile)
-            os.rename(self._sol_file_adj, str(niter) + '_' + self._sol_file_adj)
+            if Path('./' + self._res_file).is_file():
+                os.rename(self._res_file, self._sol_file)
+            else:
+                print("Running cold: adjoint solver.")
+        niter = itn['Eval']
+        os.rename(self._objDerFile, str(niter) + '_' + self._objDerFile)
+        os.rename(self._sol_file_adj, str(niter) + '_' + self._sol_file_adj)
         try:
             # main command
             sp.call(self._objDerCommand, shell=True)
