@@ -149,8 +149,10 @@ class Project:
             else:
                 print("Running cold: adjoint solver.")
         niter = itn['Eval']
-        os.rename(self._objDerFile, str(niter) + '_' + self._objDerFile)
-        os.rename(self._sol_file_adj, str(niter) + '_' + self._sol_file_adj)
+        if Path('./'+self._objDerFile).is_file():
+            os.rename(self._objDerFile, str(niter) + '_' + self._objDerFile)
+        if Path('./'+ self._sol_file_adj).is_file():
+            os.rename(self._sol_file_adj, str(niter) + '_' + self._sol_file_adj)
         try:
             # main command
             sp.call(self._objDerCommand, shell=True)
