@@ -2822,6 +2822,13 @@ void CConfig::SetConfig_Options() {
 
   addBoolOption("TURB_AUGMENTATION", TurbAugment, false);
 
+  addBoolOption("VISC_MODELING", ViscModeling, false);
+
+  addBoolOption("VISC_AUGMENTATION", ViscAugment, false);
+
+  addBoolOption("REYN_STRESS_MODELING", ReynStrModeling, false);
+
+  addBoolOption("REYN_STRESS_AUGMENTATION", ReynStrAugment, false);
     /* END_CONFIG_OPTIONS */
 
 }

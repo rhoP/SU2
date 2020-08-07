@@ -1152,6 +1152,10 @@ private:
   su2double FinDiff_Field;
   su2double field_reg_param;
   bool Field_Regularization;
+  bool ViscModeling;
+  bool ReynStrModeling;
+  bool ViscAugment;
+  bool ReynStrAugment;
 
 
   /*!
@@ -9447,4 +9451,19 @@ public:
       return TurbAugment;
   }
 
+  inline bool GetViscModeling() const{
+        return ViscModeling;
+  }
+
+  inline bool GetViscAugment() const{
+        return ViscAugment;
+  }
+
+  inline bool GetReynStrModeling() const{
+        return ReynStrModeling;
+  }
+
+  inline bool GetReynStrAugment() const{
+        return ReynStrAugment;
+  }
 };
