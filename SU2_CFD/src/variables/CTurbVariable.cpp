@@ -50,7 +50,7 @@ CTurbVariable::CTurbVariable(unsigned long npoint, unsigned long ndim, unsigned 
     Rmatrix.resize(nPoint,nDim,nDim,0.0);
   }
 
-  if(config->GetTurbModeling()){
+  if(config->GetTurbModeling() || config->GetViscModeling()){
       Field_Param.resize(nPoint) = su2double(1.0);
   }
     Production.resize(nPoint) = su2double(0.0);

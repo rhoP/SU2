@@ -64,7 +64,7 @@ CDiscAdjVariable::CDiscAdjVariable(const su2double* sol, unsigned long npoint, u
     External.resize(nPoint,nVar) = su2double(0.0);
   }
 
-    if(config->GetTurbModeling()){
+    if(config->GetTurbModeling() || config->GetViscModeling()){
         Field_Param_Sens.resize(nPoint) = su2double(0.0);
     }
 }
