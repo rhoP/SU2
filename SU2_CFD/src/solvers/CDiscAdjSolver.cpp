@@ -125,7 +125,7 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
   SetBaseClassPointerToNodes();
 
 
-  if(config->GetTurbModeling()) {
+  if(config->GetTurbModeling() || config->GetViscModeling()) {
       field_params.resize(nPoint, 1.0);
       field_param_sens.resize(nPoint, 0.0);
 
@@ -396,7 +396,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
    * and thereby also the objective function. The adjoint values (i.e. the derivatives) can be
    * extracted in the ExtractAdjointVariables routine. ---*/
 
-  if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && config->GetTurbModeling()){
+  if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && (config->GetTurbModeling() || config->GetViscModeling())){
     for(unsigned long iPoint = 0; iPoint< nPoint; iPoint++){
         field_params[iPoint] =  direct_solver->GetNodes()->GetFieldParam(iPoint);
         if(!reset)
@@ -630,7 +630,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   /*--- Extract here the adjoint values of everything else that is registered as input in RegisterInput. ---*/
 
-    if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && config->GetTurbModeling()){
+    if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_TURB_SYS) && (config->GetTurbModeling() || config->GetViscModeling())){
 
 
         /*auto numberOfGlobalPoints = geometry->GetGlobal_nPointDomain();

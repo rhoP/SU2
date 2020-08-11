@@ -77,7 +77,7 @@ CDiscAdjSinglezoneDriver::CDiscAdjSinglezoneDriver(char* confFile,
     else direct_output =  COutputFactory::createOutput(INC_EULER, config, nDim);
     MainVariables = SOLUTION_VARIABLES;
     if (mesh_def) SecondaryVariables = MESH_DEFORM;
-    else if(config->GetTurbModeling()) SecondaryVariables = FIELD_VARIABLES;
+    else if(config->GetTurbModeling() || config->GetViscModeling()) SecondaryVariables = FIELD_VARIABLES;
     else          SecondaryVariables = MESH_COORDS;
     break;
 
@@ -557,7 +557,7 @@ void CDiscAdjSinglezoneDriver::SecondaryRecording(){
   if(IDX_SOL >= 0)
     solver[IDX_SOL]->SetSensitivity(geometry, solver, config);
 
-  if(config->GetTurbModeling()){
+  if(config->GetTurbModeling() || config->GetViscModeling()){
       solver[ADJTURB_SOL]->ExtractAdjoint_Variables(geometry, config);
       solver[ADJTURB_SOL]->PrintParamSensitivities(config, geometry);
 

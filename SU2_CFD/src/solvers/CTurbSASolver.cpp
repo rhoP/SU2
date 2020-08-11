@@ -237,7 +237,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
   Avg_CFL_Local = CFL;
 
 
-  if(config->GetTurbModeling()){
+  if(config->GetTurbModeling() || config->GetViscModeling()){
     ReadFieldParameters(config, geometry);
     if (rank == MASTER_NODE)
         cout << "Field parameters have been read from file "<< config->GetFieldParamFileName()<< endl;

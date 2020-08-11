@@ -325,7 +325,7 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
   AddVolumeOutput("TEMPERATURE", "Temperature",             "PRIMITIVE", "Temperature");
   AddVolumeOutput("MACH",        "Mach",                    "PRIMITIVE", "Mach number");
   AddVolumeOutput("PRESSURE_COEFF", "Pressure_Coefficient", "PRIMITIVE", "Pressure coefficient");
-  if (config->GetTurbModeling() || config->GetTurbAugment()){
+  if (config->GetTurbModeling() || config->GetTurbAugment() || config->GetViscModeling()){
       AddVolumeOutput("FIELD_P",    "Field_Parameter",                "PRIMITIVE", "Field parameter");
       AddVolumeOutput("TURB_CHI",    "Turb_Var_Chi",                "PRIMITIVE", "SA Variable chi");
       AddVolumeOutput("TURB_OMEGA",    "Turb_Var_Omega",                "PRIMITIVE", "SA Variable Omega");
@@ -476,7 +476,7 @@ void CFlowCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
   SetVolumeOutputValue("PRESSURE", iPoint, Node_Flow->GetPressure(iPoint));
   SetVolumeOutputValue("TEMPERATURE", iPoint, Node_Flow->GetTemperature(iPoint));
   SetVolumeOutputValue("MACH", iPoint, sqrt(Node_Flow->GetVelocity2(iPoint))/Node_Flow->GetSoundSpeed(iPoint));
-    if (config->GetTurbModeling() || config->GetTurbAugment()) {
+    if (config->GetTurbModeling() || config->GetTurbAugment() || config->GetViscModeling()) {
         SetVolumeOutputValue("FIELD_P", iPoint, Node_Turb->GetFieldParam(iPoint));
         SetVolumeOutputValue("TURB_CHI", iPoint, Node_Turb->Get_Ji(iPoint));
         SetVolumeOutputValue("TURB_DIST_I", iPoint, Node_Turb->Get_dist_i(iPoint));

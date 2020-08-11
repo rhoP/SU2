@@ -799,7 +799,7 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
   }
 
 
-    if(config->GetTurbModeling() || config->GetTurbAugment()){
+    if(config->GetTurbModeling() || config->GetTurbAugment() || config->GetViscModeling()){
         cout.precision(20);
         if(config->GetDirectDiff() == D_FIELD_TURB) {
             auto index_FieldParam = config->GetFieldParamIndexDD();
