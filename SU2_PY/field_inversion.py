@@ -33,6 +33,7 @@ import numpy as np
 import scipy.optimize
 from pathlib import Path
 from shutil import copyfile
+import sys
 
 # -------------------------------------------------------------------
 #  Auxiliary functions
@@ -230,13 +231,12 @@ def main():
     # params = np.asarray([np.double(p_val) for p_val in open('inputFile', 'r') if p_val[0] != 'N'])
     obj = Project(commands, inputFile, fnames, outputFiles)
     with open('optimization.stdout', 'w') as f:
-        sys.stdout = f # Change the standard output to the file we created.
         line = "# -------------------------------------------------------------------\n"
         message = "#  Begin Optimization\n"
-        print(line + message + line)
+        print(line + message + line, file=f)
         opt = scipy.optimize.minimize(obj.obj_val, params, args=({'Eval': 0},), method="L-BFGS-B", jac=obj.obj_der,
                                   bounds=None, options=options)
-        print(opt)
+        print(opt, file=f)
 
 
 #: def main()
