@@ -125,13 +125,15 @@ CDiscAdjSolver::CDiscAdjSolver(CGeometry *geometry, CConfig *config, CSolver *di
   SetBaseClassPointerToNodes();
 
 
-  if(config->GetTurbModeling() || config->GetViscModeling()) {
+  if(config->GetTurbModeling() ) {
       field_params.resize(nPoint, 1.0);
       field_param_sens.resize(nPoint, 0.0);
-
-
   }
 
+  if(config->GetViscModeling()) {
+        field_params.resize(nPoint, 0.0);
+        field_param_sens.resize(nPoint, 0.0);
+  }
 
 
   switch(KindDirect_Solver){
