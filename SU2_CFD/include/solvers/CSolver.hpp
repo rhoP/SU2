@@ -4636,6 +4636,12 @@ public:
 
   virtual su2double GetFieldRegularization(CConfig *config, CGeometry *geometry) { return 0.0;}
 
+  virtual void SetFieldParameter(unsigned long iPoint, su2double param){};
+
+  virtual su2double GetFieldParameter(unsigned long iPoint){
+        return 0.0;
+    }
+
 protected:
   /*!
    * \brief Allocate the memory for the verification solution, if necessary.

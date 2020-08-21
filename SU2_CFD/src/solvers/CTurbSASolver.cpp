@@ -372,7 +372,7 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
 
     if (neg_spalart_allmaras) muT = max(muT,0.0);
 
-    if (config->GetViscModeling()) muT = muT * nodes->GetFieldParam(iPoint);
+    if (config->GetViscModeling()) muT = muT + nodes->GetFieldParam(iPoint);
 
     nodes->SetmuT(iPoint,muT);
 

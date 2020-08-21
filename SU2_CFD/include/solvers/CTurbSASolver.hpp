@@ -45,6 +45,8 @@ private:
 
   su2double field_param_DD;
 
+  vector<su2double> field_parameters;
+
   //torch::jit::script::Module module;
 
 
@@ -441,4 +443,14 @@ public:
 
 
   su2double GetFieldRegularization(CConfig *config, CGeometry *geometry) override;
+
+  virtual void SetFieldParameter(unsigned long iPoint, su2double param) override {
+      field_parameters[iPoint] = param;
+  }
+
+  virtual su2double GetFieldParameter(unsigned long iPoint) override {
+      return field_parameters[iPoint];
+  }
+
+
 };
