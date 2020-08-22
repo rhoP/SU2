@@ -243,6 +243,14 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
         cout << "Field parameters have been read from file "<< config->GetFieldParamFileName()<< endl;
 
   }
+    if (config->GetViscModeling()) {
+        for (iPoint = 0; iPoint < nPoint; iPoint++) {
+            su2double muT = nodes->GetmuT(iPoint);
+            muT = muT + nodes->GetFieldParam(iPoint);
+            nodes->SetmuT(iPoint, muT);
+        }
+    }
+
 /*
   if(config->GetTurbAugment()){
       try{
