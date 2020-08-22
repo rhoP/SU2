@@ -353,6 +353,8 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
 
   const bool neg_spalart_allmaras = (config->GetKind_Turb_Model() == SA_NEG);
 
+  const bool visc_modeling = config->GetViscModeling();
+
   /*--- Compute eddy viscosity ---*/
 
   SU2_OMP_FOR_STAT(omp_chunk_size)
@@ -372,7 +374,7 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
 
     if (neg_spalart_allmaras) muT = max(muT,0.0);
 
-    if (config->GetViscModeling()) muT = muT * nodes->GetFieldParam(iPoint);
+    if (visc_modeling) muT = muT * nodes->GetFieldParam(iPoint);
 
     nodes->SetmuT(iPoint,muT);
 
