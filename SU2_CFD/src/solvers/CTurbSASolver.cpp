@@ -370,11 +370,10 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
     su2double Ji_3 = Ji*Ji*Ji;
     su2double fv1  = Ji_3/(Ji_3+cv1_3);
 
-    su2double muT = rho*fv1*nu_hat;
+    su2double muT = (!visc_modeling)? rho*fv1*nu_hat : rho*fv1*nu_hat * nodes->GetFieldParam(iPoint);
+
 
     if (neg_spalart_allmaras) muT = max(muT,0.0);
-
-    if (visc_modeling) muT = muT * nodes->GetFieldParam(iPoint);
 
     nodes->SetmuT(iPoint,muT);
 
