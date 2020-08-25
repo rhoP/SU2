@@ -1,0 +1,85 @@
+Build started at 2020-08-11T15:33:17.416892
+Main binary: /software/anaconda3/2020.02/bin/python3
+Build Options: -Denable-autodiff=true -Denable-directdiff=true -Denable-pywrapper=false -Dwith-mpi=enabled -Denable-cgns=false -Denable-tecio=false -Dprefix=/scratch/rohit/Projects/SU2_bin/
+Python system: Linux
+The Meson build system
+Version: 0.52.999
+Source dir: /scratch/rohit/SU2
+Build dir: /scratch/rohit/SU2/build
+Build type: native build
+Project name: SU2
+Project version: 7.0.4 "Blackbird"
+C compiler for the build machine: cc (gcc 4.8.5 "cc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39)")
+C linker for the build machine: GNU ld.bfd 2.27-43
+C++ compiler for the build machine: c++ (gcc 10.2.0 "c++ (GCC) 10.2.0")
+C++ linker for the build machine: GNU ld.bfd 2.27-43
+C compiler for the host machine: cc (gcc 4.8.5 "cc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-39)")
+C linker for the host machine: GNU ld.bfd 2.27-43
+C++ compiler for the host machine: c++ (gcc 10.2.0 "c++ (GCC) 10.2.0")
+C++ linker for the host machine: GNU ld.bfd 2.27-43
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Target machine cpu family: x86_64
+Target machine cpu: x86_64
+Program python3 found: YES (/software/anaconda3/2020.02/bin/python3)
+Dependency mpi found: YES 3.1.6 (cached)
+Dependency mpi found: YES 3.1.6 (cached)
+Message: -------------------------------------------------------------------------
+         |    ___ _   _ ___                                                      |
+         |   / __| | | |_  )   Release 7.0.4 "Blackbird"                         |
+         |   \__ \ |_| |/ /                                                      |
+         |   |___/\___//___|   Meson Configuration Summary                       |
+         |                                                                       |
+         -------------------------------------------------------------------------
+         
+         Option          Value
+         ---------------------
+         TecIO:          false
+         CGNS:           false
+         AD (reverse):   true
+         AD (forward):   true
+         Python Wrapper: false
+         Intel-MKL:      false
+         OpenBlas:       false
+         PaStiX:         false
+
+         Please be sure to add the $SU2_HOME and $SU2_RUN environment variables,
+         and update your $PATH (and $PYTHONPATH if applicable) with $SU2_RUN
+
+         Based on the input to this configuration, add these lines to your .bashrc file:
+
+         export SU2_RUN=/scratch/rohit/Projects/SU2_bin/bin
+         export SU2_HOME=/scratch/rohit/SU2
+         export PATH=$PATH:$SU2_RUN
+         export PYTHONPATH=$PYTHONPATH:$SU2_RUN
+
+         Use './ninja -C build install' to compile and install SU2
+
+Build targets in project: 17
+Found ninja-1.9.0.git at /scratch/rohit/SU2/ninja
+Running compile:
+Working directory:  /tmp/tmpsxnnqz__
+Command line:  c++ /tmp/tmpsxnnqz__/testfile.cpp -o /tmp/tmpsxnnqz__/output.obj -pipe -D_FILE_OFFSET_BITS=64 -c -std=c++11 
+
+Code:
+ int i = static_cast<int>(0);
+Compiler stdout:
+ 
+Compiler stderr:
+ 
+Compiler accepts -std=c++11: YES
+Running compile:
+Working directory:  /scratch/rohit/SU2/build/meson-private/tmphuyh29gt
+Command line:  c++ -I/software/openmpi/3.1.6/include -I/software/gcc/10.2.0/include /scratch/rohit/SU2/build/meson-private/tmphuyh29gt/testfile.cpp -o /scratch/rohit/SU2/build/meson-private/tmphuyh29gt/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 -fpermissive --print-search-dirs 
+
+Code:
+ 
+Compiler stdout:
+ install: /software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/
+programs: =/software/gcc/10.2.0/libexec/gcc/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/libexec/gcc/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/libexec/gcc/x86_64-pc-linux-gnu/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../x86_64-pc-linux-gnu/bin/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../x86_64-pc-linux-gnu/bin/
+libraries: =/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../x86_64-pc-linux-gnu/lib/x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../x86_64-pc-linux-gnu/lib/../lib64/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../x86_64-pc-linux-gnu/10.2.0/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../lib64/:/lib/x86_64-pc-linux-gnu/10.2.0/:/lib/../lib64/:/usr/lib/x86_64-pc-linux-gnu/10.2.0/:/usr/lib/../lib64/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../x86_64-pc-linux-gnu/lib/:/software/gcc/10.2.0/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../:/lib/:/usr/lib/
+
+Compiler stderr:
+ 

@@ -33,6 +33,7 @@ import numpy as np
 import scipy.optimize
 from pathlib import Path
 from shutil import copyfile
+import sys
 
 # -------------------------------------------------------------------
 #  Auxiliary functions

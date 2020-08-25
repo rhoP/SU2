@@ -1,0 +1,11 @@
+[options]
+enable-autodiff = true
+enable-directdiff = true
+enable-pywrapper = false
+with-mpi = enabled
+enable-cgns = false
+enable-tecio = false
+prefix = /scratch/rohit/Projects/SU2_bin/
+
+[properties]
+
