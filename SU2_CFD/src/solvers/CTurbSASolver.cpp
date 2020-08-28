@@ -2454,3 +2454,22 @@ su2double CTurbSASolver::GetFieldRegularization(CConfig *config, CGeometry *geom
     return val_reg_param*val_reg;
 
 }
+
+void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
+    for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
+        su2double* coord1 = geometry->node[iPoint]->GetCoord();
+        for(unsigned long& iNeighbor: neighbors[iPoint] ){
+            su2double* coord2 = geometry->node[iNeighbor]->GetCoord();
+            su2double dist = pow(pow(coord1[0]-coord2[0], 2) + pow(coord1[1] - coord2[1], 2),0.5);
+            kernels[iPoint].emplace_back(exp(dist / kernel_parameter));
+        }
+    }
+
+
+}
+
+void CTurbSASolver::UpdateNeighbors() {
+
+    // Calculate a matrix of neighbors.
+
+}

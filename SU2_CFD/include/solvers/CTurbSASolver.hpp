@@ -45,7 +45,15 @@ private:
 
   su2double field_param_DD;
 
+
+  vector<vector<su2double>> kernels;
+  vector<vector<unsigned long>> neighbors;
+  su2double kernel_parameter{2.0E-5};
+  su2double minDistance;
+
+
   torch::jit::script::Module module;
+
 
 
   /*!
@@ -441,4 +449,38 @@ public:
 
 
   su2double GetFieldRegularization(CConfig *config, CGeometry *geometry) override;
+
+  /*
+   * \brief Computes the kernels for each point and stores them into the kernel vector
+   * \param[in] geometry - Geometrical definition of the problem
+   * \param[in] config - Definition of the particular problem
+   */
+  void SetKernels(CConfig *config, CGeometry *geometry);
+
+
+  vector<su2double> GetKernelValue(unsigned long iPoint){ return kernels[iPoint];}
+
+  su2double GetKernelParameter(){return kernel_parameter;}
+
+  void SetKernelParameter(su2double val_parameter){
+      kernel_parameter = val_parameter;
+  }
+
+  void SetMinDistanceKernelReg(su2double dist){
+      minDistance = dist;
+  }
+
+
+  su2double GetMinDistanceKernelReg(){
+      return minDistance;
+  }
+
+  void UpdateNeighbors();
+
+
+
+
+
+
+
 };
