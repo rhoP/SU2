@@ -475,7 +475,7 @@ public:
       return minDistance;
   }
 
-  void UpdateNeighbors();
+  void GetNeighbors();
 
 
 

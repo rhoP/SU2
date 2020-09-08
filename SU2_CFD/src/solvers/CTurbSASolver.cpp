@@ -2468,7 +2468,7 @@ void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
 
 }
 
-void CTurbSASolver::UpdateNeighbors() {
+void CTurbSASolver::GetNeighbors() {
 
     // Calculate a matrix of neighbors.
 
