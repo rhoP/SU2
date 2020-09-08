@@ -332,6 +332,14 @@ void CFlowCompOutput::SetVolumeOutputFields(CConfig *config){
       AddVolumeOutput("TURB_DIST_I",    "Turb_Var_d",                "PRIMITIVE", "SA Variable d");
       AddVolumeOutput("TURB_S",    "Turb_Var_S",                "PRIMITIVE", "SA Variable S");
       AddVolumeOutput("TURB_SHAT",    "Turb_Var_Shat",                "PRIMITIVE", "SA variable Shat");
+      AddVolumeOutput("DENSITY_GRAD_X", "Den_Grad_X", "PRIMITIVE", "Density Gradient X");
+      AddVolumeOutput("DENSITY_GRAD_Y","Den_Grad_Y", "PRIMITIVE", "Density Gradient Y" );
+      AddVolumeOutput("VEL_GRAD_XX", "Vel_Grad_XX", "PRIMITIVE", "Velocity Gradient XX");
+      AddVolumeOutput("VEL_GRAD_XY", "Vel_Grad_XY", "PRIMITIVE", "Velocity Gradient XY");
+      AddVolumeOutput("VEL_GRAD_YX", "Vel_Grad_YX", "PRIMITIVE", "Velocity Gradient YX");
+      AddVolumeOutput("VEL_GRAD_YY", "Vel_Grad_YY", "PRIMITIVE", "Velocity Gradient YY");
+      AddVolumeOutput("PRES_GRAD_X", "Pres_Grad_X", "PRIMITIVE", "Pressure Gradient X");
+      AddVolumeOutput("PRES_GRAD_Y", "Pres_Grad_Y", "PRIMITIVE", "Pressure Gradient Y");
 
   }
 
@@ -483,6 +491,14 @@ void CFlowCompOutput::LoadVolumeData(CConfig *config, CGeometry *geometry, CSolv
         SetVolumeOutputValue("TURB_OMEGA", iPoint, Node_Turb->Get_Omega(iPoint));
         SetVolumeOutputValue("TURB_S", iPoint, Node_Turb->Get_S(iPoint));
         SetVolumeOutputValue("TURB_SHAT", iPoint, Node_Turb->Get_Shat(iPoint));
+        SetVolumeOutputValue("DENSITY_GRAD_X", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 1, 0));
+        SetVolumeOutputValue("DENSITY_GRAD_Y", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 1, 1));
+        SetVolumeOutputValue("VEL_GRAD_XX", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 2, 0));
+        SetVolumeOutputValue("VEL_GRAD_XY", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 2, 1));
+        SetVolumeOutputValue("VEL_GRAD_YX", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 3, 0));
+        SetVolumeOutputValue("VEL_GRAD_YY", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 3, 1));
+        SetVolumeOutputValue("PRES_GRAD_X", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 5, 0));
+        SetVolumeOutputValue("PRES_GRAD_Y", iPoint, Node_Flow->GetGradient_Primitive(iPoint, 5, 1));
     }
   su2double VelMag = 0.0;
   for (unsigned short iDim = 0; iDim < nDim; iDim++){
