@@ -447,7 +447,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
     bool bd_lyr =
               (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
-               && (numerics->Get_dist_i()<0.5);
+               && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
 
 
