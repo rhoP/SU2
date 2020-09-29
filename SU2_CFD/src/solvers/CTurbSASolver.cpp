@@ -246,7 +246,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
 
   if(config->GetTurbAugment()){
       try{
-          module = torch::jit::load("./traced_resnet.pt");
+          module = torch::jit::load("./trace.pt");
       }
       catch (const c10::Error& e) {
             SU2_MPI::Error("Unable to load Machine Learning Model", CURRENT_FUNCTION);
@@ -444,10 +444,10 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
           numerics->SetFieldParam(nodes->GetFieldParam(iPoint));
     }
 
-    su2double velocity_i = sqrt(solver_container[FLOW_SOL]->GetNodes()->GetVelocity2(iPoint));
+    su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
     bool bd_lyr =
-              (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf());
-               //&& (numerics->Get_dist_i()<0.1);
+              (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
+               && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
 
 
@@ -461,19 +461,50 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
 
 
         std::vector<torch::jit::IValue> inputs;
-        torch::Tensor temp_input = torch::empty({3}, options);
-        temp_input[0] = numerics->Get_Ji();
-        temp_input[1] = numerics->Get_dist_i();
-        temp_input[2] = numerics->Get_Shat();
+
+        vector<su2double> input_mins = {0.001868454135732041, 6.301924523888225e-09, 0.0, 0.0, 0.0,
+                                    -4565.9310762351615, -983.8827420516634, -42669.602202079484,
+                                    -9506.902359605796, -3814.9494511811267, -4805.409451433434};
+
+        vector<su2double> input_dens = {13207.482832420004, 42669.60220207318, 2.026483735761369,
+                                    0.0012092927100644, 0.6049680096802659, 4804.583281046827,
+                                    2887.6441061042665, 43676.2016126568, 22241.816420760304,
+                                    4472.745644232489, 5856.305373589542};
+
+        vector<su2double> inputs_raw(11, 0.0);
+
+        inputs_raw[0] = (numerics->Get_Ji());
+        inputs_raw[1] = (numerics->Get_Omega());
+        inputs_raw[2] = (numerics->Get_dist_i());
+        inputs_raw[3] = (flowNodes->GetEddyViscosity(iPoint));
+        inputs_raw[4] = (velocity_i/flowNodes->GetSoundSpeed(iPoint));
+        inputs_raw[5] = (flowNodes->GetGradient_Primitive(iPoint, 5, 0));
+        inputs_raw[6] = (flowNodes->GetGradient_Primitive(iPoint, 5, 1));
+        inputs_raw[7] = (flowNodes->GetGradient_Primitive(iPoint, 2, 0));
+        inputs_raw[8] = (flowNodes->GetGradient_Primitive(iPoint, 2, 1));
+        inputs_raw[9] = (flowNodes->GetGradient_Primitive(iPoint, 3, 0));
+        inputs_raw[10] = (flowNodes->GetGradient_Primitive(iPoint, 3, 1));
+
+        torch::Tensor temp_input = torch::empty({11}, options);
+
+        for (int ind = 0; ind < 11; ind++){
+            temp_input[ind] = (inputs_raw[ind] - input_mins[ind])/input_dens[ind];
+        }
+
         inputs.emplace_back(temp_input);
         torch::Tensor output = module.forward(inputs).toTensor();
-
-
+        // cout << "The output is "<< output.item<double>() << endl;
 
 
         numerics->SetFieldParam(output.item<double>());
 
+        // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
+
+
         nodes->SetFieldParam(iPoint, numerics->GetFieldParam());
+
+        //cout<<"field parameter set in nodes "<< iPoint<< endl;
+
     }
 
 
