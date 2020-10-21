@@ -47,8 +47,10 @@ private:
 
   vector<vector<su2double>> kernels;
   vector<vector<unsigned long>> neighbors;
-  su2double kernel_parameter{2.0E-5};
-  su2double minDistance;
+
+  vector<unsigned long> domain_t;
+  su2double kernel_parameter{1.0E-3};
+  su2double nbDistance{0.02};
 
 
   torch::jit::script::Module module;
@@ -456,30 +458,47 @@ public:
    */
   void SetKernels(CConfig *config, CGeometry *geometry);
 
-
+    /*
+     * \brief returns the kernel vector for a point
+     * \param[in] iPoint - index of the point
+     */
   vector<su2double> GetKernelValue(unsigned long iPoint){ return kernels[iPoint];}
 
+  /*
+   * \brief returns the kernel parameter
+   * \param[out] the distance parameter in the kernel
+   */
   su2double GetKernelParameter(){return kernel_parameter;}
 
+
+  /*
+   * \brief Sets the kernel parameter to some value
+   * \param[in] val_parameter - distance to set the kernel parameter to
+   */
   void SetKernelParameter(su2double val_parameter){
       kernel_parameter = val_parameter;
   }
 
-  void SetMinDistanceKernelReg(su2double dist){
-      minDistance = dist;
+
+  void SetNbDistanceKernelReg(su2double dist){
+      nbDistance = dist;
   }
 
 
-  su2double GetMinDistanceKernelReg(){
-      return minDistance;
+
+  su2double GetNbDistanceKernelReg(){
+      return nbDistance;
   }
 
-  void GetNeighbors();
 
 
+  void SetNeighbors(CConfig *config, CGeometry *geometry);
 
 
+  void SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry);
 
+  vector<su2double> GenerateChannels(unsigned long iPoint);
 
+  vector<unsigned long> GetNeighbors(unsigned long iPoint);
 
 };
