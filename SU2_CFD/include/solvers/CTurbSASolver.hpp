@@ -31,6 +31,43 @@
 #include "CTurbSolver.hpp"
 #include <torch/script.h>
 
+
+class PicElem{
+private:
+    unsigned long index;
+    su2double kernel;
+public:
+    PicElem(){
+        index = 0;
+        kernel = 0.;
+    }
+    ~PicElem(){
+
+    }
+    PicElem(unsigned long index_val, su2double kernel_val){
+        index = index_val;
+        kernel = kernel_val;
+    }
+    unsigned long get_index(){
+        return index;
+    }
+    su2double get_kernel(){
+        return kernel;
+    }
+    void set_index(unsigned long index_val){
+        index = index_val;
+    }
+    void set_kernel(su2double kernel_val){
+        kernel = kernel_val;
+    }
+};
+
+struct triplet{
+    unsigned long a {0};
+    unsigned long b {0};
+    su2double kernel {0.};
+};
+
 /*!
  * \class CTurbSASolver
  * \brief Main class for defining the turbulence model solver.
@@ -45,8 +82,8 @@ private:
   su2double field_param_DD;
 
 
-  vector<vector<su2double>> kernels;
-  vector<vector<unsigned long>> neighbors;
+  // vector<vector<su2double>> kernels;
+  vector<vector<PicElem>> neighbors;
 
   vector<unsigned long> domain_t;
   su2double kernel_parameter{1.0E-3};
@@ -68,7 +105,8 @@ private:
                           CConfig *config);
 
 public:
-  /*!
+
+    /*!
    * \brief Constructor of the class.
    */
   CTurbSASolver(void);
@@ -456,39 +494,38 @@ public:
    * \param[in] geometry - Geometrical definition of the problem
    * \param[in] config - Definition of the particular problem
    */
-  void SetKernels(CConfig *config, CGeometry *geometry);
+  // void SetKernels(CConfig *config, CGeometry *geometry);
 
     /*
      * \brief returns the kernel vector for a point
      * \param[in] iPoint - index of the point
      */
-  vector<su2double> GetKernelValue(unsigned long iPoint){ return kernels[iPoint];}
+  // vector<su2double> GetKernelValue(unsigned long iPoint){ return kernels[iPoint];}
 
   /*
    * \brief returns the kernel parameter
    * \param[out] the distance parameter in the kernel
    */
-  su2double GetKernelParameter(){return kernel_parameter;}
+  // su2double GetKernelParameter(){return kernel_parameter;}
 
 
   /*
    * \brief Sets the kernel parameter to some value
    * \param[in] val_parameter - distance to set the kernel parameter to
    */
-  void SetKernelParameter(su2double val_parameter){
+/*  void SetKernelParameter(su2double val_parameter){
       kernel_parameter = val_parameter;
-  }
+  }*/
 
-
+/*
   void SetNbDistanceKernelReg(su2double dist){
       nbDistance = dist;
   }
+*/
 
-
-
-  su2double GetNbDistanceKernelReg(){
+/*  su2double GetNbDistanceKernelReg(){
       return nbDistance;
-  }
+  }*/
 
 
 
@@ -499,6 +536,32 @@ public:
 
   vector<su2double> GenerateChannels(unsigned long iPoint);
 
-  vector<unsigned long> GetNeighbors(unsigned long iPoint);
+  // vector<PicElem> GetNeighbors(unsigned long iPoint);
+
+  su2double euclidean_distance(CGeometry* geometry, unsigned long iPoint, unsigned long jPoint){
+        return pow(pow(geometry->node[iPoint]->GetCoord(0) - geometry->node[jPoint]->GetCoord(0), 2) +
+                   pow(geometry->node[iPoint]->GetCoord(1) - geometry->node[jPoint]->GetCoord(1), 2), 0.5);
+  }
+
+  su2double n12(su2double xc) {
+      auto t1 = 0.298222773 * sqrt(xc) - 0.127125232 * xc - 0.357907906 * pow(xc, 2) +
+                0.291984971 * pow(xc, 3) - 0.105174606 * pow(xc, 4);
+      return 0.594689181 * t1;
+  }
+
+  su2double n21(su2double xc) {
+      return 1.05 * (0.2969 * sqrt(xc) - 0.1260 * xc - 0.3516 * pow(xc, 2) + 0.2843 * pow(xc, 3) - 0.1015 * pow(xc, 4));
+  }
+
+
+  vector<vector<su2double>> channel_stats = {{0.0, 0.6055165138445859}, {0.001868454135732041, 13207.48470087414},
+                                             {2.753034850436209e-09, 42714.921478879245}, {2.753034850436209e-09, 37897.135874986765},
+                                             {-12758.01543289031, 9518.125427962812}, {-16815.03497503484, 13932.639725076951},
+                                             {-42714.921478879245, 1006.599410577314}, {-9520.534595526595, 12742.92357026478},
+                                             {-3814.9494511811267, 657.7961930513623}, {-4805.409451433434, 1050.8959221561079},
+                                             {-4565.9310762351615, 238.6522048116658}, {-983.8827420516634, 1903.761364052603},
+                                             {-2253.838004301427, 9603.70130055727}, {0.0, 0.0012092927100644}};
+
+
 
 };

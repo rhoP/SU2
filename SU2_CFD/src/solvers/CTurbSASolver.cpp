@@ -249,23 +249,25 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
           cout << "Running preliminary routines for aiding machine learning of SA turbulence model: " << endl;
           cout << "\t 1. Demarcating a correction domain."<< endl;
       }
-      auto start = std::chrono::system_clock::now();
+
       SetTurbulenceModelCorrectionDomain(config, geometry);
-      auto end = std::chrono::system_clock::now();
+
+
+      // cout<< "The length of the domain vector is "<< domain_t.size() << endl;
+      if (rank ==MASTER_NODE)
+          cout << "\t 2. Pre-computing multi-vectors of neighbors and kernels." << endl;
+
+      // auto start = std::chrono::system_clock::now();
+      SetNeighbors(config, geometry);
+      /* auto end = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsed_seconds = end-start;
       std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
       std::cout << "finished computation at " << std::ctime(&end_time)
                 << "elapsed time: " << elapsed_seconds.count() << "s\n";
-      cout<< "The length of the domain vector is "<< domain_t.size() << endl;
+    */
       if (rank ==MASTER_NODE)
-          cout << "\t 2. Pre-computing multi-vectors of neighbors and kernels." << endl;
-
-
-      SetNeighbors(config, geometry);
-
-      if (rank ==MASTER_NODE)
-          cout << "\t 4. Loading the machine learning model." << endl;
+          cout << "\t 3. Loading the machine learning model." << endl;
 
       try{
           module = torch::jit::load("./trace.pt");
@@ -2508,7 +2510,7 @@ su2double CTurbSASolver::GetFieldRegularization(CConfig *config, CGeometry *geom
 
 }
 
-void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
+/*void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
 
     for (unsigned long& iPoint: domain_t){
         su2double* coord1 = geometry->node[iPoint]->GetCoord();
@@ -2520,34 +2522,46 @@ void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
     }
 
 
-}
+}*/
 
 void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 
-    // Calculate a multi vector of neighbors and pre-compute kernels
+    // Calculate a vector of triplets containing neighbor pairs and kernels
+    vector<triplet> triples;
 
-    neighbors.resize(domain_t.size());
-    kernels.resize(domain_t.size());
-
-    for (unsigned long& iPoint: domain_t){
-        for (unsigned long& jPoint: domain_t){
-            vector<unsigned long> temp;
-            su2double dist = pow(pow(geometry->node[iPoint]->GetCoord(0) - geometry->node[jPoint]->GetCoord(0), 2) +
-                    pow(geometry->node[iPoint]->GetCoord(1) - geometry->node[jPoint]->GetCoord(1), 2), 0.5);
-            if (dist < nbDistance){
-                temp.emplace_back(jPoint);
-                kernels[iPoint].emplace_back((1.0 /pow(2 * M_PI, 0.5))*exp(-dist / kernel_parameter));
+    for(unsigned long iPoint = 0; iPoint < domain_t.size(); iPoint++){
+        for(unsigned long oPoint = iPoint; oPoint < domain_t.size(); oPoint++){
+            auto d = euclidean_distance(geometry, domain_t[iPoint], domain_t[oPoint]);
+            if (d <= nbDistance){
+                triplet temp{};
+                temp.a = iPoint;
+                temp.b = oPoint;
+                temp.kernel = (1.0 /pow(2 * M_PI, 0.5))*exp(-d / kernel_parameter);
+                triples.emplace_back(temp);
             }
-            neighbors.emplace_back(temp);
         }
     }
 
+    // Calculate a multi vector of neighbors and pre-compute kernels
+    neighbors.resize(domain_t.size());
+    // kernels.resize(domain_t.size());
+    for (triplet t: triples){
+        if (t.a != t.b){
+            neighbors[t.a].emplace_back(PicElem(t.b, t.kernel));
+            neighbors[t.b].emplace_back(PicElem(t.a, t.kernel));
+        }
+        else {
+            neighbors[t.a].emplace_back(PicElem(t.b, t.kernel));
+        }
+    }
 }
 
 void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry) {
 
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
-        if (geometry->node[iPoint]->GetCoord(1) <= 0.5 && geometry->node[iPoint]->GetWall_Distance() <= 0.1){
+        if (-1.5 <= geometry->node[iPoint]->GetCoord(0) <= 1.5 &&
+            -1.0 <= geometry->node[iPoint]->GetCoord(1) <= 1.0 &&
+            geometry->node[iPoint]->GetWall_Distance() <= 0.1){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2570,12 +2584,14 @@ vector<su2double> CTurbSASolver::GenerateChannels(unsigned long iPoint) {
 
     return pictures;
 }
+/*
 
-vector<unsigned long> CTurbSASolver::GetNeighbors(unsigned long iPoint) {
+vector<PicElem> CTurbSASolver::GetNeighbors(unsigned long iPoint) {
 
     return neighbors[iPoint];
 
 }
+*/
 
 
 
