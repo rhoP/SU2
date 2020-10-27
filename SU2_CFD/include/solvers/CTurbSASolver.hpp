@@ -62,11 +62,7 @@ public:
     }
 };
 
-struct triplet{
-    unsigned long a {0};
-    unsigned long b {0};
-    su2double kernel {0.};
-};
+
 
 /*!
  * \class CTurbSASolver
@@ -534,7 +530,7 @@ public:
 
   void SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry);
 
-  vector<su2double> GenerateChannels(unsigned long iPoint);
+  vector<vector<su2double>> GenerateChannels(unsigned long iPoint);
 
   // vector<PicElem> GetNeighbors(unsigned long iPoint);
 

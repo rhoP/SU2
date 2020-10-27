@@ -257,15 +257,17 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
       if (rank ==MASTER_NODE)
           cout << "\t 2. Pre-computing multi-vectors of neighbors and kernels." << endl;
 
-      // auto start = std::chrono::system_clock::now();
+      auto start = std::chrono::system_clock::now();
       SetNeighbors(config, geometry);
-      /* auto end = std::chrono::system_clock::now();
+      auto end = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsed_seconds = end-start;
       std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
       std::cout << "finished computation at " << std::ctime(&end_time)
                 << "elapsed time: " << elapsed_seconds.count() << "s\n";
-    */
+
+      cout << "The size of neighbors first two edges: "<< neighbors[0].size() << "\t" << neighbors[1].size() <<endl;
+
       if (rank ==MASTER_NODE)
           cout << "\t 3. Loading the machine learning model." << endl;
 
@@ -2526,34 +2528,25 @@ su2double CTurbSASolver::GetFieldRegularization(CConfig *config, CGeometry *geom
 
 void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 
-    // Calculate a vector of triplets containing neighbor pairs and kernels
-    vector<triplet> triples;
+    // Calculate a multi vector of neighbors and pre-compute kernels
+    neighbors.resize(domain_t.size());
 
     for(unsigned long iPoint = 0; iPoint < domain_t.size(); iPoint++){
         for(unsigned long oPoint = iPoint; oPoint < domain_t.size(); oPoint++){
             auto d = euclidean_distance(geometry, domain_t[iPoint], domain_t[oPoint]);
             if (d <= nbDistance){
-                triplet temp{};
-                temp.a = iPoint;
-                temp.b = oPoint;
-                temp.kernel = (1.0 /pow(2 * M_PI, 0.5))*exp(-d / kernel_parameter);
-                triples.emplace_back(temp);
+                auto kernel = (1.0 /pow(2 * M_PI, 0.5))*exp(-d / kernel_parameter);
+                if (iPoint != oPoint){
+                    neighbors[iPoint].emplace_back(PicElem(oPoint, kernel));
+                    neighbors[oPoint].emplace_back(PicElem(iPoint, kernel));
+                }
+                else {
+                    neighbors[iPoint].emplace_back(PicElem(oPoint, kernel));
+                }
             }
         }
     }
 
-    // Calculate a multi vector of neighbors and pre-compute kernels
-    neighbors.resize(domain_t.size());
-    // kernels.resize(domain_t.size());
-    for (triplet t: triples){
-        if (t.a != t.b){
-            neighbors[t.a].emplace_back(PicElem(t.b, t.kernel));
-            neighbors[t.b].emplace_back(PicElem(t.a, t.kernel));
-        }
-        else {
-            neighbors[t.a].emplace_back(PicElem(t.b, t.kernel));
-        }
-    }
 }
 
 void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry) {
@@ -2568,13 +2561,22 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
 
 }
 
-vector<su2double> CTurbSASolver::GenerateChannels(unsigned long iPoint) {
-    vector<su2double> pictures;
+vector<vector<su2double>> CTurbSASolver::GenerateChannels(unsigned long iPoint) {
+    vector<vector<su2double>> channels;
+
+    channels.resize(8);
+
+    for (auto ch:channels){
+        ch.resize(400, 0.0);
+    }
 
     // Check if this point is in the domain
     const auto iPoint_index = find(begin(domain_t), end(domain_t), iPoint);
     if (iPoint_index != end(domain_t)){
-        cout << "Pictures go here. "<<endl;
+        for(int it = 0; it < 400; it++){
+            //channels[0][it] = neighbors[iPoint_index]
+        }
+
     }
     else{
         SU2_MPI::Error("Requested point is not in the correction domain. "
@@ -2582,7 +2584,7 @@ vector<su2double> CTurbSASolver::GenerateChannels(unsigned long iPoint) {
     }
 
 
-    return pictures;
+    return channels;
 }
 /*
 
