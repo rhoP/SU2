@@ -263,6 +263,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
           cout << "\t 3. Pre-computing Input coordinates and kernels." << endl;
       Compute_BaseCoordinates();
 
+      /*
       auto start = std::chrono::system_clock::now();
       SetKernels(config, geometry);
       auto end = std::chrono::system_clock::now();
@@ -271,6 +272,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
 
       std::cout << "finished computation at " << std::ctime(&end_time)
                 << "elapsed time: " << elapsed_seconds.count() << "s\n";
+      */
 
       if (rank ==MASTER_NODE)
           cout << "\t 4. Loading the machine learning model." << endl;
@@ -492,7 +494,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
 
         std::vector<torch::jit::IValue> inputs;
 
-        vector<su2double> input_mins = {0.001868454135732041, 6.301924523888225e-09, 0.0, 0.0, 0.0,
+        /*vector<su2double> input_mins = {0.001868454135732041, 6.301924523888225e-09, 0.0, 0.0, 0.0,
                                     -4565.9310762351615, -983.8827420516634, -42669.602202079484,
                                     -9506.902359605796, -3814.9494511811267, -4805.409451433434};
 
@@ -520,16 +522,14 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         for (int ind = 0; ind < 11; ind++){
             temp_input[ind] = (inputs_raw[ind] - input_mins[ind])/input_dens[ind];
         }
-
-        inputs.emplace_back(temp_input);
+        */
+        inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry));
         torch::Tensor output = module.forward(inputs).toTensor();
         // cout << "The output is "<< output.item<double>() << endl;
-
 
         numerics->SetFieldParam(output.item<double>());
 
         // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
-
 
         nodes->SetFieldParam(iPoint, numerics->GetFieldParam());
 
@@ -2549,7 +2549,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
     }
 }
 
-void CTurbSASolver::GenerateChannels(torch::Tensor& channels, unsigned long iPoint, CSolver** solver,
+torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** solver,
         CNumerics* numerics, CGeometry* geometry) {
 
     /*
@@ -2577,49 +2577,55 @@ void CTurbSASolver::GenerateChannels(torch::Tensor& channels, unsigned long iPoi
     //for (auto ch:channels){
     //    ch.resize(400, 0.0);
     //}
-    //auto channels = at::zeros((8, 20, 20));
+
+    auto options = torch::TensorOptions().dtype(torch::kDouble).requires_grad(false);
+
+    auto channel_data = torch::zeros({ 8, 20, 20 }, options);
+
+    auto channels = channel_data.accessor<su2double, 3>();
 
     // Check if this point is in the domain
     //const unsigned long iPoint_index = find(begin(domain_t), end(domain_t), iPoint);
     //if (iPoint_index != end(domain_t)){
-    auto temp = baseCoords;
-    for(int i = 0; i < 20; i++){
+    vector<vector<PicElem>> temp = baseCoords;
+
+    for(int i = 0; i < 8; i++){
         for(int j = 0; j < 20; j++){
-            temp[i][j].translate(geometry->node[iPoint]->GetCoord(0),
-                                 geometry->node[iPoint]->GetCoord(1));
-            auto temp_total = 0.0;
-            vector<su2double> temp_channel{0., 0., 0., 0., 0., 0., 0., 0.};
-            for(const auto& nbr: neighbors[iPoint]){
-                auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[i][j].get_x(), 2)
-                                 + pow(geometry->node[iPoint]->GetCoord(1) - temp[i][j].get_y(), 2));
-                if (dist <= nbRadius){
-                    auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
-                    // temp[i][j].neighbors.emplace_back(nbr);
-                    temp[i][j].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
-                    temp_total += kernel;
-                    temp_channel[0] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(nbr))/
-                            (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(nbr));
-                    temp_channel[1] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(nbr);
-                    temp_channel[2] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(nbr);
-                    temp_channel[3] += kernel;
-                    temp_channel[4] += kernel;
-                    temp_channel[5] += kernel;
-                    temp_channel[6] += kernel;
-                    temp_channel[7] += kernel;
+            for(int k = 0; k < 20; k++){
+                temp[j][k].translate(geometry->node[iPoint]->GetCoord(0),
+                                     geometry->node[iPoint]->GetCoord(1));
+
+                auto temp_total = 0.0;
+
+                for(const auto& nbr: neighbors[iPoint]){
+                    auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[j][k].get_x(), 2)
+                                     + pow(geometry->node[iPoint]->GetCoord(1) - temp[j][k].get_y(), 2));
+                    if (dist <= nbRadius){
+                        auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
+                        // temp[i][j].neighbors.emplace_back(nbr);
+                        // temp[i][j][k].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
+                        temp_total += kernel;
+                        channels[0][j][k] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(nbr))/
+                                           (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(nbr));
+                        channels[1][j][k] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(nbr);
+                        channels[2][j][k] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(nbr);
+                        channels[3][j][k] += kernel *
+                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 0);
+                        channels[4][j][k] += kernel *
+                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 1);
+                        channels[5][j][k] += kernel *
+                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
+                        channels[6][j][k] += kernel *
+                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
+                        channels[7][j][k] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(nbr);
+                    }
                 }
             }
-            temp[i][j].set_total_kernel(temp_total);
         }
     }
 
-    for(int it = 0; it < 400; it++){
-        auto tKernel = 0.0;
-        for (auto oPoint: neighbors[iPoint]){
+    // Normalize the channels
 
-        }
-        (tKernel > 0.)? channels[0][it] /= tKernel: channels[0][it] = 0.;
-        channels[0][it] = (channels[0][it] - channel_stats[0][0])/ (channel_stats[0][1] - channel_stats[0][0]);
-    }
 
     //}
     // else{
@@ -2627,6 +2633,7 @@ void CTurbSASolver::GenerateChannels(torch::Tensor& channels, unsigned long iPoi
     //                   "Cannot generate pictures for machine learning.", CURRENT_FUNCTION);
     //}
 
+    return channel_data;
 }
 
 void CTurbSASolver::Compute_BaseCoordinates() {
