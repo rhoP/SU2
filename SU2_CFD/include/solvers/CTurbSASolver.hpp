@@ -34,31 +34,43 @@
 
 class PicElem{
 private:
-    unsigned long index;
-    su2double kernel;
-public:
-    PicElem(){
-        index = 0;
-        kernel = 0.;
-    }
-    ~PicElem(){
+    su2double x;
+    su2double y;
+    su2double total_kernel;
 
+public:
+    vector<unsigned long> neighbors;
+    vector<unsigned long> kernels;
+    PicElem(){
+        x = 0.;
+        y = 0.;
     }
-    PicElem(unsigned long index_val, su2double kernel_val){
-        index = index_val;
-        kernel = kernel_val;
+    ~PicElem()=default;
+    PicElem(su2double x_val, su2double y_val){
+        x = x_val;
+        y = y_val;
     }
-    unsigned long get_index(){
-        return index;
+    su2double get_x() const{
+        return x;
     }
-    su2double get_kernel(){
-        return kernel;
+    su2double get_y() const{
+        return y;
     }
-    void set_index(unsigned long index_val){
-        index = index_val;
+    void set_x(su2double x_val){
+        x = x_val;
     }
-    void set_kernel(su2double kernel_val){
-        kernel = kernel_val;
+    void set_y(su2double y_val){
+        y = y_val;
+    }
+    void translate(su2double xt, su2double yt){
+        x -= xt;
+        y -= yt;
+    }
+    void set_total_kernel(su2double ValKernel){
+        total_kernel = ValKernel;
+    }
+    su2double get_total_kernel(){
+        return total_kernel;
     }
 };
 
@@ -77,17 +89,19 @@ private:
 
   su2double field_param_DD;
 
+  vector<vector<unsigned long>> neighbors;
 
-  // vector<vector<su2double>> kernels;
-  vector<vector<PicElem>> neighbors;
+  vector<vector<vector<PicElem>>> picture_kernels;
 
   vector<unsigned long> domain_t;
   su2double kernel_parameter{1.0E-3};
-  su2double nbDistance{0.02};
+  su2double nbDistance{0.03};
+  su2double nbRadius{0.02};
 
 
   torch::jit::script::Module module;
 
+  vector<vector<PicElem>> baseCoords;
 
 
   /*!
@@ -102,7 +116,7 @@ private:
 
 public:
 
-    /*!
+  /*!
    * \brief Constructor of the class.
    */
   CTurbSASolver(void);
@@ -490,7 +504,7 @@ public:
    * \param[in] geometry - Geometrical definition of the problem
    * \param[in] config - Definition of the particular problem
    */
-  // void SetKernels(CConfig *config, CGeometry *geometry);
+  void SetKernels(CConfig *config, CGeometry *geometry);
 
     /*
      * \brief returns the kernel vector for a point
@@ -530,7 +544,8 @@ public:
 
   void SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry);
 
-  vector<vector<su2double>> GenerateChannels(unsigned long iPoint);
+  void GenerateChannels(torch::Tensor& channels,  unsigned long iPoint, CSolver** solver,
+          CNumerics* numerics, CGeometry* geometry);
 
   // vector<PicElem> GetNeighbors(unsigned long iPoint);
 
@@ -549,6 +564,8 @@ public:
       return 1.05 * (0.2969 * sqrt(xc) - 0.1260 * xc - 0.3516 * pow(xc, 2) + 0.2843 * pow(xc, 3) - 0.1015 * pow(xc, 4));
   }
 
+
+  void Compute_BaseCoordinates();
 
   vector<vector<su2double>> channel_stats = {{0.0, 0.6055165138445859}, {0.001868454135732041, 13207.48470087414},
                                              {2.753034850436209e-09, 42714.921478879245}, {2.753034850436209e-09, 37897.135874986765},

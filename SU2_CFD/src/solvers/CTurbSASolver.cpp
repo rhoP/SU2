@@ -255,10 +255,16 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
 
       // cout<< "The length of the domain vector is "<< domain_t.size() << endl;
       if (rank ==MASTER_NODE)
-          cout << "\t 2. Pre-computing multi-vectors of neighbors and kernels." << endl;
+          cout << "\t 2. Pre-computing multi-vectors of neighbors." << endl;
+
+      SetNeighbors(config, geometry);
+
+      if (rank ==MASTER_NODE)
+          cout << "\t 3. Pre-computing Input coordinates and kernels." << endl;
+      Compute_BaseCoordinates();
 
       auto start = std::chrono::system_clock::now();
-      SetNeighbors(config, geometry);
+      SetKernels(config, geometry);
       auto end = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsed_seconds = end-start;
       std::time_t end_time = std::chrono::system_clock::to_time_t(end);
@@ -266,10 +272,8 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
       std::cout << "finished computation at " << std::ctime(&end_time)
                 << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
-      cout << "The size of neighbors first two edges: "<< neighbors[0].size() << "\t" << neighbors[1].size() <<endl;
-
       if (rank ==MASTER_NODE)
-          cout << "\t 3. Loading the machine learning model." << endl;
+          cout << "\t 4. Loading the machine learning model." << endl;
 
       try{
           module = torch::jit::load("./trace.pt");
@@ -2512,20 +2516,6 @@ su2double CTurbSASolver::GetFieldRegularization(CConfig *config, CGeometry *geom
 
 }
 
-/*void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
-
-    for (unsigned long& iPoint: domain_t){
-        su2double* coord1 = geometry->node[iPoint]->GetCoord();
-        for(unsigned long& iNeighbor: neighbors[iPoint] ){
-            su2double* coord2 = geometry->node[iNeighbor]->GetCoord();
-            su2double dist = pow(pow(coord1[0]-coord2[0], 2) + pow(coord1[1] - coord2[1], 2),0.5);
-            kernels[iPoint].emplace_back(exp(dist / kernel_parameter));
-        }
-    }
-
-
-}*/
-
 void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 
     // Calculate a multi vector of neighbors and pre-compute kernels
@@ -2535,13 +2525,13 @@ void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
         for(unsigned long oPoint = iPoint; oPoint < domain_t.size(); oPoint++){
             auto d = euclidean_distance(geometry, domain_t[iPoint], domain_t[oPoint]);
             if (d <= nbDistance){
-                auto kernel = (1.0 /pow(2 * M_PI, 0.5))*exp(-d / kernel_parameter);
+                // auto kernel = (1.0 /pow(2 * M_PI, 0.5))*exp(-d / kernel_parameter);
                 if (iPoint != oPoint){
-                    neighbors[iPoint].emplace_back(PicElem(oPoint, kernel));
-                    neighbors[oPoint].emplace_back(PicElem(iPoint, kernel));
+                    neighbors[iPoint].emplace_back(oPoint);
+                    neighbors[oPoint].emplace_back(iPoint);
                 }
                 else {
-                    neighbors[iPoint].emplace_back(PicElem(oPoint, kernel));
+                    neighbors[iPoint].emplace_back(oPoint);
                 }
             }
         }
@@ -2550,7 +2540,6 @@ void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 }
 
 void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry) {
-
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
         if (-1.5 <= geometry->node[iPoint]->GetCoord(0) <= 1.5 &&
             -1.0 <= geometry->node[iPoint]->GetCoord(1) <= 1.0 &&
@@ -2558,33 +2547,135 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
             domain_t.emplace_back(iPoint);
         }
     }
+}
+
+void CTurbSASolver::GenerateChannels(torch::Tensor& channels, unsigned long iPoint, CSolver** solver,
+        CNumerics* numerics, CGeometry* geometry) {
+
+    /*
+     * The input is the index iPoint. It is assumed that all neighbors within a
+     * large enough ball around this point are already available.
+     * First thing to do is to compute the coordinates of the picture points for this index.
+     * This could be a simple translation from a given set of coordinates.
+     * Next, we loop over all the neighbors, compute kernels based on neighbors
+     * at the specific coordinates of the picture and then return the set of pictures.
+     * T1: coordinate vector
+     * T2: For each neighbor in the neighbors vector, compute distance and if this is
+     * within some distance (this check may not be necessary), compute the kernel.
+     * T3: The channel value is computed from the kernels.
+     * T4: If the coordinate is inside the airfoil, set its value to zero.
+     * */
+
+
+
+
+
+    //vector<vector<su2double>> channels;
+
+    //channels.resize(8);
+
+    //for (auto ch:channels){
+    //    ch.resize(400, 0.0);
+    //}
+    //auto channels = at::zeros((8, 20, 20));
+
+    // Check if this point is in the domain
+    //const unsigned long iPoint_index = find(begin(domain_t), end(domain_t), iPoint);
+    //if (iPoint_index != end(domain_t)){
+    auto temp = baseCoords;
+    for(int i = 0; i < 20; i++){
+        for(int j = 0; j < 20; j++){
+            temp[i][j].translate(geometry->node[iPoint]->GetCoord(0),
+                                 geometry->node[iPoint]->GetCoord(1));
+            auto temp_total = 0.0;
+            vector<su2double> temp_channel{0., 0., 0., 0., 0., 0., 0., 0.};
+            for(const auto& nbr: neighbors[iPoint]){
+                auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[i][j].get_x(), 2)
+                                 + pow(geometry->node[iPoint]->GetCoord(1) - temp[i][j].get_y(), 2));
+                if (dist <= nbRadius){
+                    auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
+                    // temp[i][j].neighbors.emplace_back(nbr);
+                    temp[i][j].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
+                    temp_total += kernel;
+                    temp_channel[0] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(nbr))/
+                            (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(nbr));
+                    temp_channel[1] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(nbr);
+                    temp_channel[2] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(nbr);
+                    temp_channel[3] += kernel;
+                    temp_channel[4] += kernel;
+                    temp_channel[5] += kernel;
+                    temp_channel[6] += kernel;
+                    temp_channel[7] += kernel;
+                }
+            }
+            temp[i][j].set_total_kernel(temp_total);
+        }
+    }
+
+    for(int it = 0; it < 400; it++){
+        auto tKernel = 0.0;
+        for (auto oPoint: neighbors[iPoint]){
+
+        }
+        (tKernel > 0.)? channels[0][it] /= tKernel: channels[0][it] = 0.;
+        channels[0][it] = (channels[0][it] - channel_stats[0][0])/ (channel_stats[0][1] - channel_stats[0][0]);
+    }
+
+    //}
+    // else{
+    //    SU2_MPI::Error("Requested point is not in the correction domain. "
+    //                   "Cannot generate pictures for machine learning.", CURRENT_FUNCTION);
+    //}
 
 }
 
-vector<vector<su2double>> CTurbSASolver::GenerateChannels(unsigned long iPoint) {
-    vector<vector<su2double>> channels;
+void CTurbSASolver::Compute_BaseCoordinates() {
 
-    channels.resize(8);
+    baseCoords.resize(20);
+    auto temp = PicElem(0., 0.);
 
-    for (auto ch:channels){
-        ch.resize(400, 0.0);
+    for (int i = 0; i < 20; i++){
+        baseCoords[i].resize(20, temp);
     }
 
-    // Check if this point is in the domain
-    const auto iPoint_index = find(begin(domain_t), end(domain_t), iPoint);
-    if (iPoint_index != end(domain_t)){
-        for(int it = 0; it < 400; it++){
-            //channels[0][it] = neighbors[iPoint_index]
+    for (int i= 0; i < 20; i++){
+        for (int j = 0; j < 20; j++){
+            baseCoords[i][j].set_x(- 0.0075 + i * 0.015 / 19);
+            baseCoords[i][j].set_y(- 0.0075 + j* 0.015 / 19);
         }
-
     }
-    else{
-        SU2_MPI::Error("Requested point is not in the correction domain. "
-                       "Cannot generate pictures for machine learning.", CURRENT_FUNCTION);
+}
+
+void CTurbSASolver::SetKernels(CConfig *config, CGeometry *geometry) {
+/*
+ * We pre-compute the kernels for the set of points close to the boundary layer
+ * These will in the end be used in the numerics loops
+ */
+    for(const auto& iPoint:domain_t){
+        auto temp = baseCoords;
+        for(int i = 0; i < 20; i++){
+            for(int j = 0; j < 20; j++){
+                temp[i][j].translate(geometry->node[iPoint]->GetCoord(0),
+                        geometry->node[iPoint]->GetCoord(1));
+                auto temp_total = 0.0;
+                for(const auto& nbr: neighbors[iPoint]){
+                    auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[i][j].get_x(), 2)
+                            + pow(geometry->node[iPoint]->GetCoord(1) - temp[i][j].get_y(), 2));
+                    if (dist <= nbRadius){
+                        temp[i][j].neighbors.emplace_back(nbr);
+                        temp[i][j].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
+                        temp_total += (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
+                    }
+                }
+                temp[i][j].set_total_kernel(temp_total);
+            }
+        }
+        picture_kernels.emplace_back(temp);
     }
 
-
-    return channels;
+    // clear the memory associated with domain_t and neighbors
+    vector<unsigned long>().swap(domain_t);
+    vector<vector<unsigned long>>().swap(neighbors);
 }
 /*
 
