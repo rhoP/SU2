@@ -526,7 +526,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         }
         */
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
-        torch::Tensor output = module.forward(inputs).toTensor();
+        torch::Tensor output = module.forward(inputs[None, ...]).toTensor();
         auto temp = output.item<double>();
         if(temp != 1.0) cout << "The output is "<< temp << endl;
 
