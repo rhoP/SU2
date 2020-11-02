@@ -2545,7 +2545,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
         if (-1.5 <= geometry->node[iPoint]->GetCoord(0) <= 1.5 &&
             -1.0 <= geometry->node[iPoint]->GetCoord(1) <= 1.0 &&
-            geometry->node[iPoint]->GetWall_Distance() <= 0.6){
+            geometry->node[iPoint]->GetWall_Distance() <= 1.1){
             domain_t.emplace_back(iPoint);
         }
     }
