@@ -526,7 +526,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         }
         */
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
-        torch::Tensor output = module.forward(inputs[None, ...]).toTensor();
+        torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<double>();
         if(temp != 1.0) cout << "The output is "<< temp << endl;
 
@@ -2663,6 +2663,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
     //    SU2_MPI::Error("Requested point is not in the correction domain. "
     //                   "Cannot generate pictures for machine learning.", CURRENT_FUNCTION);
     //}
+    channel_data = torch::unsqueeze(channel_data, 0);
     return channel_data;
 }
 
