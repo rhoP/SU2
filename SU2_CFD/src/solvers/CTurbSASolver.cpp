@@ -29,6 +29,7 @@
 #include "../../include/variables/CTurbSAVariable.hpp"
 #include "../../../Common/include/omp_structure.hpp"
 #include <iterator>
+#include <cmath>
 
 
 CTurbSASolver::CTurbSASolver(void) : CTurbSolver() { }
@@ -528,7 +529,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
         torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<double>();
-        if(temp == nan) temp = 1.0;
+        if(! std::isfinite(temp)) temp = 1.0;
 
         numerics->SetFieldParam(temp);
 
