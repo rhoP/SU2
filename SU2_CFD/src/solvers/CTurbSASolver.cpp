@@ -260,7 +260,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
       SetNeighbors(config, geometry);
 
       if (rank ==MASTER_NODE)
-          cout << "\t 3. Pre-computing Input coordinates and kernels." << endl;
+          cout << "\t 3. Pre-computing Input coordinates." << endl;
       Compute_BaseCoordinates();
 
       /*
@@ -477,9 +477,11 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
-    bool bd_lyr =
-              (velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
-               && (numerics->Get_dist_i()<1.0);
+    bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
+            (-.8 <= geometry->node[iPoint]->GetCoord(1) <= .8) &&
+            (geometry->node[iPoint]->GetWall_Distance() <= 0.5);
+              //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
+               // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
 
 
@@ -2543,7 +2545,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
         if (-1.5 <= geometry->node[iPoint]->GetCoord(0) <= 1.5 &&
             -1.0 <= geometry->node[iPoint]->GetCoord(1) <= 1.0 &&
-            geometry->node[iPoint]->GetWall_Distance() <= 0.1){
+            geometry->node[iPoint]->GetWall_Distance() <= 0.6){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2587,16 +2589,25 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
     // Check if this point is in the domain
     //const unsigned long iPoint_index = find(begin(domain_t), end(domain_t), iPoint);
     //if (iPoint_index != end(domain_t)){
+
+
+
     vector<vector<PicElem>> temp = baseCoords;
+    for(int j = 0; j < 20; j++){
+        for(int k = 0; k < 20; k++){
+            temp[j][k].translate(geometry->node[iPoint]->GetCoord(0),
+                                 geometry->node[iPoint]->GetCoord(1));
 
-    for(int i = 0; i < 8; i++){
-        for(int j = 0; j < 20; j++){
-            for(int k = 0; k < 20; k++){
-                temp[j][k].translate(geometry->node[iPoint]->GetCoord(0),
-                                     geometry->node[iPoint]->GetCoord(1));
+            auto temp_total = 0.0;
+            bool foil = (0.0 <= temp[j][k].get_x() <= 1.0) &&
+                        (-n12(temp[j][k].get_x()) <= temp[j][k].get_y() <= n12(temp[j][k].get_x()));
 
-                auto temp_total = 0.0;
-
+            if (foil){
+                for (int i = 0; i < 8; i++){
+                    channels[i][j][k] = 0.0;
+                }
+            }
+            else {
                 for(const auto& nbr: neighbors[iPoint]){
                     auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[j][k].get_x(), 2)
                                      + pow(geometry->node[iPoint]->GetCoord(1) - temp[j][k].get_y(), 2));
@@ -2606,25 +2617,43 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                         // temp[i][j][k].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
                         temp_total += kernel;
                         channels[0][j][k] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(nbr))/
-                                           (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(nbr));
+                                             (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(nbr));
                         channels[1][j][k] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(nbr);
                         channels[2][j][k] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(nbr);
                         channels[3][j][k] += kernel *
-                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 0);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 0);
                         channels[4][j][k] += kernel *
-                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 1);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 1, 1);
                         channels[5][j][k] += kernel *
-                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
                         channels[6][j][k] += kernel *
-                                solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
                         channels[7][j][k] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(nbr);
                     }
                 }
+                /* Normalize the channels
+                 */
+                channels[0][j][k] = (channels[0][j][k] - channel_stats[0][0])/
+                                    ((channel_stats[0][1] - channel_stats[0][0]) * temp_total);
+                channels[1][j][k] = (channels[1][j][k] - channel_stats[1][0])/
+                                    ((channel_stats[1][1] - channel_stats[1][0]) * temp_total);
+                channels[2][j][k] = (channels[2][j][k] - channel_stats[2][0])/
+                                    ((channel_stats[2][1] - channel_stats[2][0]) * temp_total);
+                channels[3][j][k] = (channels[3][j][k] - channel_stats[4][0])/
+                                    ((channel_stats[4][1] - channel_stats[4][0]) * temp_total);
+                channels[4][j][k] = (channels[4][j][k] - channel_stats[5][0])/
+                                    ((channel_stats[5][1] - channel_stats[5][0]) * temp_total);
+                channels[5][j][k] = (channels[5][j][k] - channel_stats[10][0])/
+                                    ((channel_stats[10][1] - channel_stats[10][0]) * temp_total);
+                channels[6][j][k] = (channels[6][j][k] - channel_stats[11][0])/
+                                    ((channel_stats[11][1] - channel_stats[11][0]) * temp_total);
+                channels[7][j][k] = (channels[7][j][k] - channel_stats[13][0])/
+                                    ((channel_stats[13][1] - channel_stats[13][0]) * temp_total);
             }
         }
     }
 
-    // Normalize the channels
+
 
 
     //}
