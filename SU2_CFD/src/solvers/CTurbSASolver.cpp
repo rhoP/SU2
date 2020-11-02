@@ -528,13 +528,13 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
         torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<double>();
-        if(temp != 1.0) cout << "The output is "<< temp << endl;
+        if(temp == nan) temp = 1.0;
 
-        numerics->SetFieldParam(output.item<double>());
+        numerics->SetFieldParam(temp);
 
         // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
 
-        nodes->SetFieldParam(iPoint, output.item<double>());
+        nodes->SetFieldParam(iPoint, temp);
 
         //cout<<"field parameter set in nodes "<< iPoint<< endl;
 
