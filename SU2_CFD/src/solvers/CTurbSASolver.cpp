@@ -480,7 +480,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
     bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
             (-.8 <= geometry->node[iPoint]->GetCoord(1) <= .8) &&
-            (geometry->node[iPoint]->GetWall_Distance() <= 1.0);
+            (geometry->node[iPoint]->GetWall_Distance() <= .1);
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -2596,7 +2596,6 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
     vector<vector<PicElem>> temp = baseCoords;
 #pragma omp for
     for(const auto& nbr: neighbors[iPoint]){
-        // omp pragmas go here
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
                 temp[k][j].translate(geometry->node[iPoint]->GetCoord(0),
