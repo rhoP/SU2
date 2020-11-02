@@ -479,7 +479,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
     bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
             (-.8 <= geometry->node[iPoint]->GetCoord(1) <= .8) &&
-            (geometry->node[iPoint]->GetWall_Distance() <= 0.5);
+            (geometry->node[iPoint]->GetWall_Distance() <= 1.0);
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -527,13 +527,14 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         */
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry));
         torch::Tensor output = module.forward(inputs).toTensor();
-        // cout << "The output is "<< output.item<double>() << endl;
+        auto temp = output.item<double>();
+        if(temp != 1.0) cout << "The output is "<< temp << endl;
 
         numerics->SetFieldParam(output.item<double>());
 
         // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
 
-        nodes->SetFieldParam(iPoint, numerics->GetFieldParam());
+        nodes->SetFieldParam(iPoint, output.item<double>());
 
         //cout<<"field parameter set in nodes "<< iPoint<< endl;
 
