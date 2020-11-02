@@ -545,7 +545,7 @@ public:
   void SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry);
 
   torch::Tensor GenerateChannels(unsigned long iPoint, CSolver** solver,
-          CNumerics* numerics, CGeometry* geometry);
+          CNumerics* numerics, CGeometry* geometry, CConfig *config);
 
   // vector<PicElem> GetNeighbors(unsigned long iPoint);
 

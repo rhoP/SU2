@@ -2822,6 +2822,8 @@ void CConfig::SetConfig_Options() {
 
   addBoolOption("TURB_AUGMENTATION", TurbAugment, false);
 
+  addBoolOption("NACA0012", n_12, true);
+
     /* END_CONFIG_OPTIONS */
 
 }

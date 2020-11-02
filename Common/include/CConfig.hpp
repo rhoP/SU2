@@ -1144,7 +1144,7 @@ private:
 
   /* Turbulence Modeling Options*/
   bool TurbModeling;                               /*!brief option for running in turbulence modeling mode. */
-  bool TurbAugment;
+  bool TurbAugment, n_12;
   unsigned long FieldParamIndexDD;
   string FieldParamFileName;
   string FieldAdjointFileName;
@@ -9445,6 +9445,10 @@ public:
 
   inline bool GetTurbAugment() const{
       return TurbAugment;
+  }
+
+  inline bool Getn12() const{
+      return n_12;
   }
 
 };
