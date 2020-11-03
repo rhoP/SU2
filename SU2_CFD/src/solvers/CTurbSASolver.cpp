@@ -532,7 +532,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<su2double>();
         // if(! std::isfinite(temp)) temp = 1.0;
-
+cout << "the output of the model is "<< temp <<endl;
         numerics->SetFieldParam(temp);
 
         // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
@@ -2576,7 +2576,6 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
-#pragma omp parallel for default(none)
     for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
