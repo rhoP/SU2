@@ -478,10 +478,10 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
-    bool bd_lyr = ((-1.4 <= geometry->node[iPoint]->GetCoord(0)) &&
-      (geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
-      (-.5 <= geometry->node[iPoint]->GetCoord(1)) &&
-      (geometry->node[iPoint]->GetCoord(1) <= .5) &&
+    bool bd_lyr = ((-1.2 <= geometry->node[iPoint]->GetCoord(0)) &&
+      (geometry->node[iPoint]->GetCoord(0) <= 1.2) &&
+      (-.3 <= geometry->node[iPoint]->GetCoord(1)) &&
+      (geometry->node[iPoint]->GetCoord(1) <= .3) &&
       (geometry->node[iPoint]->GetWall_Distance() <= .1));
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
@@ -2544,9 +2544,9 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
         auto x = geometry->node[iPoint]->GetCoord(0);
         auto y = geometry->node[iPoint]->GetCoord(1);
         auto d = geometry->node[iPoint]->GetWall_Distance();
-        if ((-1.5 <= x) && (x <= 1.5) &&
-                (-1.0 <= y) && (y  <= 1.0) &&
-                (d <= .5)){
+        if ((-1.2 <= x) && (x <= 1.2) &&
+                (-.4 <= y) && (y  <= .4) &&
+                (d <= .3)){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2576,7 +2576,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
-#pragma omp parallel for
+#pragma omp parallel for default(none)
     for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
