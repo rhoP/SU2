@@ -529,7 +529,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
         torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<double>();
-        if(! std::isfinite(temp)) temp = 1.0;
+        // if(! std::isfinite(temp)) temp = 1.0;
 
         numerics->SetFieldParam(temp);
 
@@ -2634,6 +2634,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                                          solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(nbr, 5, 0);
                     channels[7][k][j] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(nbr);
                 }
+                if (temp_total == 0.0) temp_total = 1.0;
 
                 channels[0][k][j] = (channels[0][k][j] - channel_stats[0][0])/
                                     ((channel_stats[0][1] - channel_stats[0][0]) * temp_total);
