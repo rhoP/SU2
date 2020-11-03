@@ -39,8 +39,6 @@ private:
     su2double total_kernel;
 
 public:
-    vector<unsigned long> neighbors;
-    vector<unsigned long> kernels;
     PicElem(){
         x = 0.;
         y = 0.;
