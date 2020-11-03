@@ -477,11 +477,11 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
-    bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0)) &&
+    bool bd_lyr = ((-1.4 <= geometry->node[iPoint]->GetCoord(0)) &&
       (geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
       (-.5 <= geometry->node[iPoint]->GetCoord(1)) &&
       (geometry->node[iPoint]->GetCoord(1) <= .5) &&
-      (geometry->node[iPoint]->GetWall_Distance() <= 1.);
+      (geometry->node[iPoint]->GetWall_Distance() <= 1.));
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -2591,7 +2591,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                 bool foil = (config->Getn12())?
                             ((-n12(temp[k][j].get_x()) <= temp[k][j].get_y()) && (temp[k][j].get_y() <= n12(temp[k][j].get_x()))):
                             ((-n21(temp[k][j].get_x()) <= temp[k][j].get_y()) && (temp[k][j].get_y() <= n21(temp[k][j].get_x())));
-                if ((0.0 <= temp[k][j].get_x()) && (temp[k][j].get_x() <= 1.0)) && foil {
+                if (((0.0 <= temp[k][j].get_x()) && (temp[k][j].get_x() <= 1.0)) && foil){
                     for (int i = 0; i < 8; i++){
                             channels[i][k][j] = 0.0;
                     }
