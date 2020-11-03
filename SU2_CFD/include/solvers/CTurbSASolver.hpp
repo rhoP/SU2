@@ -92,7 +92,7 @@ private:
   vector<vector<vector<PicElem>>> picture_kernels;
 
   vector<unsigned long> domain_t;
-  su2double kernel_parameter{1.0E-3};
+  su2double kernel_parameter{1.0E-4};
   su2double nbDistance{0.03};
   su2double nbRadius{0.02};
 

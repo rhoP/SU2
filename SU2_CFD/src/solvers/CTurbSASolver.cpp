@@ -2592,7 +2592,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                     }
                 }
                 else{
-                    auto dist = sqrt(pow(geometry->node[*it]->GetCoord(0) - temp[k][j].get_x(), 2)
+                    auto dist = (pow(geometry->node[*it]->GetCoord(0) - temp[k][j].get_x(), 2)
                                      + pow(geometry->node[*it]->GetCoord(1) - temp[k][j].get_y(), 2));
                     if (dist <= nbRadius){
                         auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
