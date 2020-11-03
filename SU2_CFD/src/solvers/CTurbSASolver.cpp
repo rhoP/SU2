@@ -253,7 +253,7 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
 
       SetTurbulenceModelCorrectionDomain(config, geometry);
 
-
+cout << "The size of the domain is "<< domain_t.size() << endl;
       // cout<< "The length of the domain vector is "<< domain_t.size() << endl;
       if (rank ==MASTER_NODE)
           cout << "\t 2. Pre-computing multi-vectors of neighbors." << endl;
@@ -480,7 +480,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
     bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
             (-.8 <= geometry->node[iPoint]->GetCoord(1) <= .8) &&
-            (geometry->node[iPoint]->GetWall_Distance() <= .5);
+            (geometry->node[iPoint]->GetWall_Distance() <= 1.);
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -528,7 +528,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         */
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
         torch::Tensor output = module.forward(inputs).toTensor();
-        auto temp = output.item<double>();
+        auto temp = output.item<su2double>();
         // if(! std::isfinite(temp)) temp = 1.0;
 
         numerics->SetFieldParam(temp);
@@ -2524,7 +2524,6 @@ void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 
     // Calculate a multi vector of neighbors and pre-compute kernels
     neighbors.resize(domain_t.size());
-
     for(unsigned long iPoint = 0; iPoint < domain_t.size(); iPoint++){
         for(unsigned long oPoint = iPoint; oPoint < domain_t.size(); oPoint++){
             auto d = euclidean_distance(geometry, domain_t[iPoint], domain_t[oPoint]);
@@ -2555,23 +2554,6 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
 
 torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** solver,
         CNumerics* numerics, CGeometry* geometry, CConfig *config) {
-    /*
-     * The input is the index iPoint. It is assumed that all neighbors within a
-     * large enough ball around this point are already available.
-     * First thing to do is to compute the coordinates of the picture points for this index.
-     * This could be a simple translation from a given set of coordinates.
-     * Next, we loop over all the neighbors, compute kernels based on neighbors
-     * at the specific coordinates of the picture and then return the set of pictures.
-     * T1: coordinate vector
-     * T2: For each neighbor in the neighbors vector, compute distance and if this is
-     * within some distance (this check may not be necessary), compute the kernel.
-     * T3: The channel value is computed from the kernels.
-     * T4: If the coordinate is inside the airfoil, set its value to zero.
-     * */
-
-
-
-
 
     //vector<vector<su2double>> channels;
 
@@ -2594,7 +2576,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
-#pragma omp parallel for default(none)
+#pragma omp parallel for
     for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
