@@ -284,16 +284,6 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
             SU2_MPI::Error("Unable to load Machine Learning Model", CURRENT_FUNCTION);
       }
   }
-    cout << "Some analyses of the segmentation at point 2343  "<< endl;
-  auto isdom = find(domain_t.begin(), domain_t.end(), 2343);
-  cout << "Is the point in the domain? " << (isdom != domain_t.end()) <<endl;
-  cout << "The point is in the location " << *isdom << endl;
-  cout << "distance " << distance(domain_t.begin(), isdom) << endl;
-  cout << "dist " << isdom - domain_t.begin() << endl;
-  cout << neighbors.size() << endl;
-  cout << domain_t.size() << endl;
-  cout << domain_t[isdom - domain_t.begin()] << endl;
-  cout << neighbors[isdom - domain_t.begin()] << endl;
 
 
   /*--- Add the solver name (max 8 characters) ---*/
@@ -2586,8 +2576,8 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
-#pragma omp parallel for default(none)
-    for(const auto& it : neighbors[iPoint]){
+#pragma omp parallel for
+    for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
                 temp[k][j].translate(geometry->node[iPoint]->GetCoord(0),
@@ -2603,26 +2593,26 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                     }
                 }
                 else{
-                    auto dist = sqrt(pow(geometry->node[it]->GetCoord(0) - temp[k][j].get_x(), 2)
-                                     + pow(geometry->node[it]->GetCoord(1) - temp[k][j].get_y(), 2));
+                    auto dist = sqrt(pow(geometry->node[*it]->GetCoord(0) - temp[k][j].get_x(), 2)
+                                     + pow(geometry->node[*it]->GetCoord(1) - temp[k][j].get_y(), 2));
                     if (dist <= nbRadius){
                         auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
                         // temp[i][j].neighbors.emplace_back(nbr);
                         // temp[i][j][k].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
                         temp_total += kernel;
-                        channels[0][k][j] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(it))/
-                                             (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(it));
-                        channels[1][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(it);
-                        channels[2][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(it);
+                        channels[0][k][j] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(*it))/
+                                             (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(*it));
+                        channels[1][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(*it);
+                        channels[2][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(*it);
                         channels[3][k][j] += kernel *
-                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(it, 1, 0);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 0);
                         channels[4][k][j] += kernel *
-                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(it, 1, 1);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 1);
                         channels[5][k][j] += kernel *
-                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(it, 5, 0);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
                         channels[6][k][j] += kernel *
-                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(it, 5, 0);
-                        channels[7][k][j] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(it);
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
+                        channels[7][k][j] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(*it);
                     }
                     if (temp_total == 0.0) temp_total = 1.0;
 
