@@ -2580,7 +2580,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
-#pragma omp parallel for
+#pragma omp parallel for default(none)
     for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
