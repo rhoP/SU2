@@ -2545,7 +2545,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
         auto d = geometry->node[iPoint]->GetWall_Distance();
         if ((-1.2 <= x) && (x <= 1.2) &&
                 (-.4 <= y) && (y  <= .4) &&
-                (d <= .3)){
+                (d <= .15)){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2575,6 +2575,7 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
 
 
     vector<vector<PicElem>> temp = baseCoords;
+#pragma omp parallel for
     for(auto it = neighbors[iPoint].begin(); it < neighbors[iPoint].end(); it++){
         for(int j = 0; j < 20; j++){
             for(int k = 0; k < 20; k++){
