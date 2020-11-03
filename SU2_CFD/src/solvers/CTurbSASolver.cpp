@@ -481,7 +481,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
       (geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
       (-.5 <= geometry->node[iPoint]->GetCoord(1)) &&
       (geometry->node[iPoint]->GetCoord(1) <= .5) &&
-      (geometry->node[iPoint]->GetWall_Distance() <= 1.));
+      (geometry->node[iPoint]->GetWall_Distance() <= .1));
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
