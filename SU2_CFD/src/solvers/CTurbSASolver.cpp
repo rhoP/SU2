@@ -253,7 +253,6 @@ CTurbSASolver::CTurbSASolver(CGeometry *geometry, CConfig *config, unsigned shor
 
       SetTurbulenceModelCorrectionDomain(config, geometry);
 
-cout << "The size of the domain is "<< domain_t.size() << endl;
       // cout<< "The length of the domain vector is "<< domain_t.size() << endl;
       if (rank ==MASTER_NODE)
           cout << "\t 2. Pre-computing multi-vectors of neighbors." << endl;
