@@ -2550,7 +2550,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
         auto d = geometry->node[iPoint]->GetWall_Distance();
         if ((-1.5 <= x) && (x <= 1.5) &&
                 (-1.0 <= y) && (y  <= 1.0) &&
-                (d <= 1.1)){
+                (d <= .5)){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2597,8 +2597,8 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                     }
                 }
                 else{
-                    auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[k][j].get_x(), 2)
-                                     + pow(geometry->node[iPoint]->GetCoord(1) - temp[k][j].get_y(), 2));
+                    auto dist = sqrt(pow(geometry->node[*it]->GetCoord(0) - temp[k][j].get_x(), 2)
+                                     + pow(geometry->node[*it]->GetCoord(1) - temp[k][j].get_y(), 2));
                     if (dist <= nbRadius){
                         auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
                         // temp[i][j].neighbors.emplace_back(nbr);
