@@ -477,9 +477,11 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
-    bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
-            (-.8 <= geometry->node[iPoint]->GetCoord(1) <= .8) &&
-            (geometry->node[iPoint]->GetWall_Distance() <= 1.);
+    bool bd_lyr = (-1.4 <= geometry->node[iPoint]->GetCoord(0)) &&
+      (geometry->node[iPoint]->GetCoord(0) <= 1.4) &&
+      (-.5 <= geometry->node[iPoint]->GetCoord(1)) &&
+      (geometry->node[iPoint]->GetCoord(1) <= .5) &&
+      (geometry->node[iPoint]->GetWall_Distance() <= 1.);
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -2543,9 +2545,12 @@ void CTurbSASolver::SetNeighbors(CConfig *config, CGeometry *geometry) {
 
 void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometry *geometry) {
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++){
-        if (-1.5 <= geometry->node[iPoint]->GetCoord(0) <= 1.5 &&
-            -1.0 <= geometry->node[iPoint]->GetCoord(1) <= 1.0 &&
-            geometry->node[iPoint]->GetWall_Distance() <= 1.1){
+        auto x = geometry->node[iPoint]->GetCoord(0);
+        auto y = geometry->node[iPoint]->GetCoord(1);
+        auto d = geometry->node[iPoint]->GetWall_Distance();
+        if ((-1.5 <= x) && (x <= 1.5) &&
+                (-1.0 <= y) && (y  <= 1.0) &&
+                (d <= 1.1)){
             domain_t.emplace_back(iPoint);
         }
     }
@@ -2583,56 +2588,55 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                                      geometry->node[iPoint]->GetCoord(1));
 
                 auto temp_total = 0.0;
-                bool foil = (config->Getn12())? (0.0 <= temp[k][j].get_x() <= 1.0) &&
-                                                (-n12(temp[k][j].get_x()) <= temp[k][j].get_y() <= n12(temp[k][j].get_x())):
-                            (0.0 <= temp[k][j].get_x() <= 1.0) &&
-                            (-n21(temp[k][j].get_x()) <= temp[k][j].get_y() <= n21(temp[k][j].get_x()));
-
-                if (foil){
+                bool foil = (config->Getn12())?
+                            ((-n12(temp[k][j].get_x()) <= temp[k][j].get_y()) && (temp[k][j].get_y() <= n12(temp[k][j].get_x()))):
+                            ((-n21(temp[k][j].get_x()) <= temp[k][j].get_y()) && (temp[k][j].get_y() <= n21(temp[k][j].get_x())));
+                if ((0.0 <= temp[k][j].get_x()) && (temp[k][j].get_x() <= 1.0)) && foil {
                     for (int i = 0; i < 8; i++){
-                        channels[i][k][j] = 0.0;
+                            channels[i][k][j] = 0.0;
                     }
                 }
+                else{
+                    auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[k][j].get_x(), 2)
+                                     + pow(geometry->node[iPoint]->GetCoord(1) - temp[k][j].get_y(), 2));
+                    if (dist <= nbRadius){
+                        auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
+                        // temp[i][j].neighbors.emplace_back(nbr);
+                        // temp[i][j][k].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
+                        temp_total += kernel;
+                        channels[0][k][j] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(*it))/
+                                             (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(*it));
+                        channels[1][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(*it);
+                        channels[2][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(*it);
+                        channels[3][k][j] += kernel *
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 0);
+                        channels[4][k][j] += kernel *
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 1);
+                        channels[5][k][j] += kernel *
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
+                        channels[6][k][j] += kernel *
+                                             solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
+                        channels[7][k][j] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(*it);
+                    }
+                    if (temp_total == 0.0) temp_total = 1.0;
 
-                auto dist = sqrt(pow(geometry->node[iPoint]->GetCoord(0) - temp[k][j].get_x(), 2)
-                                 + pow(geometry->node[iPoint]->GetCoord(1) - temp[k][j].get_y(), 2));
-                if (dist <= nbRadius){
-                    auto kernel = (1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter);
-                    // temp[i][j].neighbors.emplace_back(nbr);
-                    // temp[i][j][k].kernels.emplace_back((1 / sqrt(2 * M_PI)) * exp(-dist / kernel_parameter));
-                    temp_total += kernel;
-                    channels[0][k][j] += kernel * sqrt(solver[FLOW_SOL]->GetNodes()->GetVelocity2(*it))/
-                                         (solver[FLOW_SOL]->GetNodes()->GetSoundSpeed(*it));
-                    channels[1][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Ji(*it);
-                    channels[2][k][j] += kernel * solver[TURB_SOL]->GetNodes()->Get_Omega(*it);
-                    channels[3][k][j] += kernel *
-                                         solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 0);
-                    channels[4][k][j] += kernel *
-                                         solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 1, 1);
-                    channels[5][k][j] += kernel *
-                                         solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
-                    channels[6][k][j] += kernel *
-                                         solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(*it, 5, 0);
-                    channels[7][k][j] += kernel * solver[FLOW_SOL]->GetNodes()->GetEddyViscosity(*it);
+                    channels[0][k][j] = (channels[0][k][j] - channel_stats[0][0])/
+                                        ((channel_stats[0][1] - channel_stats[0][0]) * temp_total);
+                    channels[1][k][j] = (channels[1][k][j] - channel_stats[1][0])/
+                                        ((channel_stats[1][1] - channel_stats[1][0]) * temp_total);
+                    channels[2][k][j] = (channels[2][k][j] - channel_stats[2][0])/
+                                        ((channel_stats[2][1] - channel_stats[2][0]) * temp_total);
+                    channels[3][k][j] = (channels[3][k][j] - channel_stats[4][0])/
+                                        ((channel_stats[4][1] - channel_stats[4][0]) * temp_total);
+                    channels[4][k][j] = (channels[4][k][j] - channel_stats[5][0])/
+                                        ((channel_stats[5][1] - channel_stats[5][0]) * temp_total);
+                    channels[5][k][j] = (channels[5][k][j] - channel_stats[10][0])/
+                                        ((channel_stats[10][1] - channel_stats[10][0]) * temp_total);
+                    channels[6][k][j] = (channels[6][k][j] - channel_stats[11][0])/
+                                        ((channel_stats[11][1] - channel_stats[11][0]) * temp_total);
+                    channels[7][k][j] = (channels[7][k][j] - channel_stats[13][0])/
+                                        ((channel_stats[13][1] - channel_stats[13][0]) * temp_total);
                 }
-                if (temp_total == 0.0) temp_total = 1.0;
-
-                channels[0][k][j] = (channels[0][k][j] - channel_stats[0][0])/
-                                    ((channel_stats[0][1] - channel_stats[0][0]) * temp_total);
-                channels[1][k][j] = (channels[1][k][j] - channel_stats[1][0])/
-                                    ((channel_stats[1][1] - channel_stats[1][0]) * temp_total);
-                channels[2][k][j] = (channels[2][k][j] - channel_stats[2][0])/
-                                    ((channel_stats[2][1] - channel_stats[2][0]) * temp_total);
-                channels[3][k][j] = (channels[3][k][j] - channel_stats[4][0])/
-                                    ((channel_stats[4][1] - channel_stats[4][0]) * temp_total);
-                channels[4][k][j] = (channels[4][k][j] - channel_stats[5][0])/
-                                    ((channel_stats[5][1] - channel_stats[5][0]) * temp_total);
-                channels[5][k][j] = (channels[5][k][j] - channel_stats[10][0])/
-                                    ((channel_stats[10][1] - channel_stats[10][0]) * temp_total);
-                channels[6][k][j] = (channels[6][k][j] - channel_stats[11][0])/
-                                    ((channel_stats[11][1] - channel_stats[11][0]) * temp_total);
-                channels[7][k][j] = (channels[7][k][j] - channel_stats[13][0])/
-                                    ((channel_stats[13][1] - channel_stats[13][0]) * temp_total);
             }
         }
 
