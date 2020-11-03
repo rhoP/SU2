@@ -531,8 +531,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         inputs.emplace_back(GenerateChannels(iPoint, solver_container, numerics, geometry, config));
         torch::Tensor output = module.forward(inputs).toTensor();
         auto temp = output.item<su2double>();
-        // if(! std::isfinite(temp)) temp = 1.0;
-cout << "the output of the model is "<< temp <<endl;
+        if(! std::isfinite(temp)) temp = 1.0;
         numerics->SetFieldParam(temp);
 
         // cout<<"field param set in numerics "<< iPoint<<" to value "<< numerics->GetFieldParam()<< endl;
