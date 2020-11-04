@@ -2615,22 +2615,22 @@ torch::Tensor CTurbSASolver::GenerateChannels(unsigned long iPoint, CSolver** so
                     }
                     if (temp_total == 0.0) temp_total = 1.0;
 
-                    channels[0][k][j] = (channels[0][k][j] - channel_stats[0][0])/
-                                        ((channel_stats[0][1] - channel_stats[0][0]) * temp_total);
-                    channels[1][k][j] = (channels[1][k][j] - channel_stats[1][0])/
-                                        ((channel_stats[1][1] - channel_stats[1][0]) * temp_total);
-                    channels[2][k][j] = (channels[2][k][j] - channel_stats[2][0])/
-                                        ((channel_stats[2][1] - channel_stats[2][0]) * temp_total);
-                    channels[3][k][j] = (channels[3][k][j] - channel_stats[4][0])/
-                                        ((channel_stats[4][1] - channel_stats[4][0]) * temp_total);
-                    channels[4][k][j] = (channels[4][k][j] - channel_stats[5][0])/
-                                        ((channel_stats[5][1] - channel_stats[5][0]) * temp_total);
-                    channels[5][k][j] = (channels[5][k][j] - channel_stats[10][0])/
-                                        ((channel_stats[10][1] - channel_stats[10][0]) * temp_total);
-                    channels[6][k][j] = (channels[6][k][j] - channel_stats[11][0])/
-                                        ((channel_stats[11][1] - channel_stats[11][0]) * temp_total);
-                    channels[7][k][j] = (channels[7][k][j] - channel_stats[13][0])/
-                                        ((channel_stats[13][1] - channel_stats[13][0]) * temp_total);
+                    channels[0][k][j] = (channels[0][k][j] / temp_total - channel_stats[0][0])/
+                                        ((channel_stats[0][1] - channel_stats[0][0]) );
+                    channels[1][k][j] = (channels[1][k][j] / temp_total- channel_stats[1][0])/
+                                        ((channel_stats[1][1] - channel_stats[1][0]));
+                    channels[2][k][j] = (channels[2][k][j] / temp_total- channel_stats[2][0])/
+                                        ((channel_stats[2][1] - channel_stats[2][0]) );
+                    channels[3][k][j] = (channels[3][k][j] / temp_total- channel_stats[4][0])/
+                                        ((channel_stats[4][1] - channel_stats[4][0]) );
+                    channels[4][k][j] = (channels[4][k][j] / temp_total- channel_stats[5][0])/
+                                        ((channel_stats[5][1] - channel_stats[5][0]) );
+                    channels[5][k][j] = (channels[5][k][j] / temp_total- channel_stats[10][0])/
+                                        ((channel_stats[10][1] - channel_stats[10][0]));
+                    channels[6][k][j] = (channels[6][k][j] / temp_total- channel_stats[11][0])/
+                                        ((channel_stats[11][1] - channel_stats[11][0]));
+                    channels[7][k][j] = (channels[7][k][j] / temp_total- channel_stats[13][0])/
+                                        ((channel_stats[13][1] - channel_stats[13][0]));
                 }
             }
         }
