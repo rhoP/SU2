@@ -478,10 +478,10 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     }
 
     su2double velocity_i = sqrt(flowNodes->GetVelocity2(iPoint));
-    bool bd_lyr = ((-1.2 <= geometry->node[iPoint]->GetCoord(0)) &&
+    bool bd_lyr = ((-.2 <= geometry->node[iPoint]->GetCoord(0)) &&
       (geometry->node[iPoint]->GetCoord(0) <= 1.2) &&
-      (-.3 <= geometry->node[iPoint]->GetCoord(1)) &&
-      (geometry->node[iPoint]->GetCoord(1) <= .3) &&
+      (-.2 <= geometry->node[iPoint]->GetCoord(1)) &&
+      (geometry->node[iPoint]->GetCoord(1) <= .2) &&
       (geometry->node[iPoint]->GetWall_Distance() <= .1));
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
@@ -2543,9 +2543,9 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
         auto x = geometry->node[iPoint]->GetCoord(0);
         auto y = geometry->node[iPoint]->GetCoord(1);
         auto d = geometry->node[iPoint]->GetWall_Distance();
-        if ((-1.2 <= x) && (x <= 1.2) &&
-                (-.4 <= y) && (y  <= .4) &&
-                (d <= .15)){
+        if ((-.2 <= x) && (x <= 1.2) &&
+                (-.2 <= y) && (y  <= .2) &&
+                (d <= .1)){
             domain_t.emplace_back(iPoint);
         }
     }
