@@ -482,7 +482,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
       (geometry->node[iPoint]->GetCoord(0) <= 1.2) &&
       (-.2 <= geometry->node[iPoint]->GetCoord(1)) &&
       (geometry->node[iPoint]->GetCoord(1) <= .2) &&
-      (geometry->node[iPoint]->GetWall_Distance() <= .1));
+      (geometry->node[iPoint]->GetWall_Distance() <= .05));
               //(velocity_i < 0.99 * solver_container[FLOW_SOL]->GetModVelocity_Inf())
                // && (numerics->Get_dist_i()<1.0);
               //&& (geometry->node[iPoint]->GetCoord(1)>0.01);
@@ -2545,7 +2545,7 @@ void CTurbSASolver::SetTurbulenceModelCorrectionDomain(CConfig *config, CGeometr
         auto d = geometry->node[iPoint]->GetWall_Distance();
         if ((-.2 <= x) && (x <= 1.2) &&
                 (-.2 <= y) && (y  <= .2) &&
-                (d <= .1)){
+                (d <= .05)){
             domain_t.emplace_back(iPoint);
         }
     }
